@@ -9,6 +9,7 @@ public class Main {
 		for (SilkDb db : new Examples().jsons()) {
 			SqlStringWriter writer = new SqlStringWriter();
 			Generator.generate(writer, db, Generator.Dialect.Sqlite);
+			System.out.println(writer.build());
 		}
 	}
 }
