@@ -1,4 +1,4 @@
-package nl.markv.silk.sql_gen;
+package nl.markv.silk.sql_gen.writer;
 
 import javax.annotation.Nonnull;
 

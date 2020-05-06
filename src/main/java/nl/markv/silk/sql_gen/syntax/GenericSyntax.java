@@ -1,7 +1,14 @@
-package nl.markv.silk.sql_gen;
+package nl.markv.silk.sql_gen.syntax;
 
 import javax.annotation.Nonnull;
 
+import nl.markv.silk.sql_gen.writer.SqlWriter;
+
+/**
+ * Attempt at a common version of SQL syntax.
+ *
+ * Dialect implementations can extend this and override only their dialect's peculiarities.
+ */
 public class GenericSyntax implements Syntax {
 
 	private String schemaName;
