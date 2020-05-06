@@ -54,7 +54,7 @@ public class GenericSyntax implements Syntax {
 
 	@Override
 	public void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable DatabaseSpecific db) {
-		sql.addLine("}");
+		sql.addLine("};");
 	}
 
 	@Override
@@ -123,20 +123,23 @@ public class GenericSyntax implements Syntax {
 	@Override
 	public void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
 		sql.add("\tunique(");
-		boolean isFirst = true;
-		for (String col : columns) {
-			if (isFirst) {
-				isFirst = false;
-			} else {
-				sql.add(", ");
-			}
-			sql.add(col);
-		}
+		sql.delimitered(", ", columns);
 		sql.addLine("),");
 	}
 
 	@Override
 	public void tableUniqueConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
+		sql.add("create unique index if not exists ");
+		if (constraintName != null) {
+			sql.add(constraintName);
+		} else {
+			nameFromCols(sql, "i", tableName, columns);
+		}
+		sql.add(" on ");
+		sql.add(tableName);
+		sql.add(" (");
+		sql.delimitered(", ", columns);
+		sql.addLine(");");
 	}
 
 	@Override
@@ -146,7 +149,9 @@ public class GenericSyntax implements Syntax {
 
 	@Override
 	public void tableCheckConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific) {
-
+		sql.add("\tcheck(");
+		sql.add(condition);
+		sql.addLine("),");
 	}
 
 	@Override
@@ -156,5 +161,13 @@ public class GenericSyntax implements Syntax {
 	@Override
 	public void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
 		// Usually nothing to do here.
+	}
+
+	protected String nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
+		sql.add(prefix);
+		sql.add("_");
+		sql.add(table);
+		sql.add("_");
+		sql.delimitered("_", columns);
 	}
 }

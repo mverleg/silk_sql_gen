@@ -1,5 +1,7 @@
 package nl.markv.silk.sql_gen.writer;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 public interface SqlWriter {
@@ -16,6 +18,18 @@ public interface SqlWriter {
 		for (String t : more) {
 			add(" ");
 			add(t);
+		}
+	}
+
+	default void delimitered(@Nonnull String delimiter, @Nonnull List<String> items) {
+		boolean isFirst = true;
+		for (String item : items) {
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				add(delimiter);
+			}
+			add(item);
 		}
 	}
 
