@@ -26,7 +26,7 @@ public interface Syntax {
 
 	String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue);
 
-	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, @Nullable String autoValueName, @Nullable String defaultValue);
+	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, MetaInfo.PrimaryKey primaryKey, @Nullable String autoValueName, @Nullable String defaultValue, boolean isLast);
 
 	void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue);
 

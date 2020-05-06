@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import nl.markv.silk.parse.SilkDb;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.pojos.v0_1_0.Table;
+import nl.markv.silk.sql_gen.syntax.MetaInfo;
 import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
@@ -48,20 +49,29 @@ public class Generator {
 			sql.newline();
 			gen.startTable(sql, table.group, table.name, table.description);
 			List<Triple<LongColumn, String, String>> autoColumns = new ArrayList<>();
-			for (LongColumn column : table.columns) {
+			for (int colNr = 0; colNr < table.columns.size(); colNr++) {
+				LongColumn column = table.columns.get(colNr);
 				String autoValue = null;
 				String dataType = gen.dataTypeName(sql, parseDataType(column.type));
 				if (column.autoValue != null) {
 					autoValue = gen.autoValueName(sql, column.autoValue);
 					autoColumns.add(Triple.of(column, dataType, autoValue));
 				}
+				boolean isLast = colNr == table.columns.size() - 1;
+				MetaInfo.PrimaryKey primaryKey = MetaInfo.PrimaryKey.NotPart;
+				if (table.primaryKey.contains(column.name)) {
+					primaryKey = table.primaryKey.size() == 1 ?
+							MetaInfo.PrimaryKey.Single : MetaInfo.PrimaryKey.Composite;
+				}
 				gen.columnInCreateTable(
 						sql,
 						column.name,
 						dataType,
 						column.nullable,
+						primaryKey,
 						autoValue,
-						column.defaultValue
+						column.defaultValue,
+						isLast
 				);
 			}
 			for (Triple<LongColumn, String, String> autoCol : autoColumns) {

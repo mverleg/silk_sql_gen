@@ -5,10 +5,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import nl.markv.silk.sql_gen.writer.SqlWriter;
-import nl.markv.silk.types.DataType;
 
 import static org.apache.commons.lang3.Validate.isTrue;
 
@@ -58,10 +55,21 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, @Nullable String autoValueName, @Nullable String defaultValue) {
+	public void columnInCreateTable(
+			@Nonnull SqlWriter sql,
+			@Nonnull String name,
+			@Nonnull String dataTypeName,
+			boolean nullable,
+			MetaInfo.PrimaryKey primaryKey,
+			@Nullable String autoValueName,
+			@Nullable String defaultValue,
+			boolean isLast
+	) {
 		sql.add("\t");
 		sql.add(name, dataTypeName);
-		if (!nullable) {
+		if (primaryKey != MetaInfo.PrimaryKey.NotPart) {
+			sql.add(" primary key");
+		} else if (!nullable) {
 			sql.add(" not null");
 		}
 		if (autoValueName != null) {
@@ -72,7 +80,10 @@ public abstract class GenericSyntax implements Syntax {
 			sql.add(" default ");
 			sql.add(defaultValue);
 		}
-		sql.addLine(",");
+		if (!isLast) {
+			sql.add(",");
+		}
+		sql.newline();
 	}
 
 	@Override
