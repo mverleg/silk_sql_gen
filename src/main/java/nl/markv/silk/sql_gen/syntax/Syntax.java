@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import nl.markv.silk.pojos.v0_1_0.Columns;
 import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
@@ -49,4 +50,10 @@ public interface Syntax {
 	void tableCheckConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific);
 
 	void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific);
+
+	void startTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific);
+
+	void endTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific);
+
+	void tableReference(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull Columns columns, @Nullable DatabaseSpecific databaseSpecific);
 }

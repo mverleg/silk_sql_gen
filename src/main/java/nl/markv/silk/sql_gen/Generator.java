@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import nl.markv.silk.parse.SilkDb;
 import nl.markv.silk.pojos.v0_1_0.CheckConstraint;
 import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
+import nl.markv.silk.pojos.v0_1_0.ForeignKey;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.pojos.v0_1_0.Table;
 import nl.markv.silk.pojos.v0_1_0.UniqueConstraint;
@@ -106,18 +107,12 @@ public class Generator {
 
 	private static void generateConstraints(@Nonnull SqlWriter sql, @Nonnull SilkDb schema, Syntax gen) {
 		for (Table table : schema.tables()) {
-			if (!table.checkConstraints.isEmpty()) {
-				sql.newline();
-			}
 			gen.startTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
 			for (UniqueConstraint unique : table.uniqueConstraints) {
 				gen.tableUniqueConstraintAfter(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
 			}
 			gen.endTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
 
-			if (!table.uniqueConstraints.isEmpty()) {
-				sql.newline();
-			}
 			gen.startTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
 			for (CheckConstraint check : table.checkConstraints) {
 				gen.tableCheckConstraintAfter(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
@@ -128,8 +123,11 @@ public class Generator {
 
 	private static void generateReferences(@Nonnull SqlWriter sql, @Nonnull SilkDb schema, Syntax gen) {
 		for (Table table : schema.tables()) {
-			sql.newline();
-			//TODO @mark: schema.tables().forEach(t -> t.references);
+			gen.startTableReferences(sql, table.group, table.name, table.databaseSpecific);
+			for (ForeignKey ref : table.references) {
+				gen.tableReference(sql, table.group, table.name, ref.name, ref.table, ref.columns, table.databaseSpecific);
+			}
+			gen.endTableReferences(sql, table.group, table.name, table.databaseSpecific);
 		}
 	}
 }

@@ -130,11 +130,7 @@ public class GenericSyntax implements Syntax {
 	@Override
 	public void tableUniqueConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
 		sql.add("create unique index if not exists ");
-		if (constraintName != null) {
-			sql.add(constraintName);
-		} else {
-			nameFromCols(sql, "i", tableName, columns);
-		}
+		nameFromCols(sql, "i", tableName, columns);
 		sql.add(" on ");
 		sql.add(tableName);
 		sql.add(" (");
@@ -163,9 +159,11 @@ public class GenericSyntax implements Syntax {
 		// Usually nothing to do here.
 	}
 
-	protected String nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
-		sql.add(prefix);
-		sql.add("_");
+	protected void nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
+		if (prefix != null) {
+			sql.add(prefix);
+			sql.add("_");
+		}
 		sql.add(table);
 		sql.add("_");
 		sql.delimitered("_", columns);
