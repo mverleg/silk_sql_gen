@@ -5,8 +5,12 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.DataType;
+
+import static org.apache.commons.lang3.Validate.isTrue;
 
 /**
  * Attempt at a common version of SQL syntax.
@@ -54,13 +58,21 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
-		return null;
-	}
-
-	@Override
 	public void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, @Nullable String autoValueName, @Nullable String defaultValue) {
-
+		sql.add("\t");
+		sql.add(name, dataTypeName);
+		if (!nullable) {
+			sql.add(" not null");
+		}
+		if (autoValueName != null) {
+			isTrue(defaultValue == null);
+			sql.add(" ");
+			sql.add(autoValueName);
+		} else if (defaultValue != null) {
+			sql.add(" default ");
+			sql.add(defaultValue);
+		}
+		sql.addLine(",");
 	}
 
 	@Override
