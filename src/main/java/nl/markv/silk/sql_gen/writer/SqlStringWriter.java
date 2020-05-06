@@ -2,10 +2,11 @@ package nl.markv.silk.sql_gen.writer;
 
 import javax.annotation.Nonnull;
 
-public class SqlStringWriter {
+public class SqlStringWriter implements SqlWriter {
 
-	private StringBuilder sql = new StringBuilder();
+	private final StringBuilder sql = new StringBuilder();
 
+	@Override
 	public void add(@Nonnull String txt) {
 		sql.append(txt);
 	}

@@ -11,8 +11,8 @@ import nl.markv.silk.sql_gen.writer.SqlWriter;
  */
 public class GenericSyntax implements Syntax {
 
-	private String schemaName;
-	private String silkVersion;
+	protected String schemaName;
+	protected String silkVersion;
 
 	public GenericSyntax(@Nonnull String schemaName, @Nonnull String silkVersion) {
 		this.schemaName = schemaName;
