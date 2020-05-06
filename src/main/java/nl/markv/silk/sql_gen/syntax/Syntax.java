@@ -27,5 +27,7 @@ public interface Syntax {
 
 	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, @Nullable String autoValueName, @Nullable String defaultValue);
 
+	void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue);
+
 	void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey);
 }

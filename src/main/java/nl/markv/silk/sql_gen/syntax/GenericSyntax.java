@@ -1,7 +1,11 @@
 package nl.markv.silk.sql_gen.syntax;
 
-import javax.annotation.Nonnull;
+import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 
 /**
@@ -24,14 +28,61 @@ public class GenericSyntax implements Syntax {
 		this.schemaName = schemaName;
 		this.silkVersion = silkVersion;
 		sql.newline();
-		sql.add("-- start schema ");
-		sql.addLine(schemaName);
-		sql.newline();
+		sql.comment("start schema " + schemaName);
 	}
 
 	@Override
 	public void postlude(@Nonnull SqlWriter sql) {
-		sql.add("-- end schema ");
-		sql.addLine(schemaName);
+		sql.newline();
+		sql.comment("end schema " + schemaName);
+		sql.newline();
+	}
+
+	@Override
+	public void startTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable String description) {
+		if (description != null) {
+			sql.comment(description);
+		}
+		sql.add("create table ");
+		sql.add(name);
+		sql.addLine(" {");
+	}
+
+	@Override
+	public void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name) {
+		sql.addLine("}");
+	}
+
+	@Override
+	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull String type) {
+		return null;
+	}
+
+	@Override
+	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue) {
+		switch (autoValue) {
+			case INCREMENT:
+				return "autoincrement";
+			case CREATED_TIMESTAMP:
+				return "default current_timestamp";
+			case UPDATED_TIMESTAMP:
+				return "default current_timestamp";
+		}
+		throw new UnsupportedOperationException("unknown auto data value " + autoValue);
+	}
+
+	@Override
+	public void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, @Nullable String autoValueName, @Nullable String defaultValue) {
+
+	}
+
+	@Override
+	public void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue) {
+
+	}
+
+	@Override
+	public void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey) {
+
 	}
 }

@@ -15,4 +15,6 @@ public interface SqlWriter {
 		//TODO: which newline symbol?
 		add("\n");
 	}
+
+	void comment(@Nonnull String text);
 }

@@ -11,6 +11,14 @@ public class SqlStringWriter implements SqlWriter {
 		sql.append(txt);
 	}
 
+	@Override
+	public void comment(@Nonnull String text) {
+		for (String line : text.split("\\n")) {
+			add("-- ");
+			addLine(line);
+		}
+	}
+
 	@Nonnull
 	public String build() {
 		return sql.toString();

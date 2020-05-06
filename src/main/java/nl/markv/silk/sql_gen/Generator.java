@@ -1,8 +1,12 @@
 package nl.markv.silk.sql_gen;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
+
+import org.apache.commons.lang3.tuple.Triple;
 
 import nl.markv.silk.parse.SilkDb;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
@@ -39,16 +43,27 @@ public class Generator {
 		gen.prelude(sql);
 
 		for (Table table : schema.tables()) {
+			sql.newline();
 			gen.startTable(sql, table.group, table.name, table.description);
+			List<Triple<LongColumn, String, String>> autoColumns = new ArrayList<>();
 			for (LongColumn column : table.columns) {
+				String autoValue = null;
+				String dataType = gen.dataTypeName(sql, column.type);
+				if (column.autoValue != null) {
+					autoValue = gen.autoValueName(sql, column.autoValue);
+					autoColumns.add(Triple.of(column, dataType, autoValue));
+				}
 				gen.columnInCreateTable(
 						sql,
 						column.name,
-						gen.dataTypeName(sql, column.type),
+						dataType,
 						column.nullable,
-						gen.autoValueName(sql, column.autoValue),
+						autoValue,
 						column.defaultValue
 				);
+			}
+			for (Triple<LongColumn, String, String> autoCol : autoColumns) {
+				gen.autoValueAfterCreation(sql, autoCol.getLeft().name, autoCol.getMiddle(), autoCol.getRight());
 			}
 			gen.primaryKeyInCreateTable(sql, table.primaryKey);
 			gen.endTable(sql, table.group, table.name);
