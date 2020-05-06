@@ -6,7 +6,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
+import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
+import nl.markv.silk.types.DataType;
 
 import static org.apache.commons.lang3.Validate.isTrue;
 
@@ -15,7 +17,7 @@ import static org.apache.commons.lang3.Validate.isTrue;
  *
  * Dialect implementations can extend this and override only their dialect's peculiarities.
  */
-public abstract class GenericSyntax implements Syntax {
+public class GenericSyntax implements Syntax {
 
 	protected String schemaName;
 	protected String silkVersion;
@@ -56,6 +58,16 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
+	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
+		return null;
+	}
+
+	@Override
+	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue) {
+		return null;
+	}
+
+	@Override
 	public void columnInCreateTable(
 			@Nonnull SqlWriter sql,
 			@Nonnull String name,
@@ -82,9 +94,9 @@ public abstract class GenericSyntax implements Syntax {
 			sql.add(" default ");
 			sql.add(defaultValue);
 		}
-		if (!isLast) {
+//		if (!isLast) {
 			sql.add(",");
-		}
+//		}
 		sql.newline();
 	}
 
@@ -96,5 +108,53 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	public void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey, @Nullable DatabaseSpecific db) {
 		// Primary key is specified inline by default.
+	}
+
+	@Override
+	public void startTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
+	}
+
+	@Override
+	public void endTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
+	}
+
+	@Override
+	public void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
+		sql.add("\tunique(");
+		boolean isFirst = true;
+		for (String col : columns) {
+			if (isFirst) {
+				isFirst = false;
+			} else {
+				sql.add(", ");
+			}
+			sql.add(col);
+		}
+		sql.addLine("),");
+	}
+
+	@Override
+	public void tableUniqueConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
+	}
+
+	@Override
+	public void startTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
+	}
+
+	@Override
+	public void tableCheckConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific) {
+
+	}
+
+	@Override
+	public void tableCheckConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific) {
+	}
+
+	@Override
+	public void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
 	}
 }

@@ -89,9 +89,16 @@ public class Generator {
 						table.databaseSpecific
 				);
 			}
+			for (UniqueConstraint unique : table.uniqueConstraints) {
+				gen.tableUniqueConstraintInline(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
+			}
+			for (CheckConstraint check : table.checkConstraints) {
+				gen.tableCheckConstraintInline(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
+			}
 			for (Triple<LongColumn, String, String> autoCol : autoColumns) {
 				gen.autoValueAfterCreation(sql, autoCol.getLeft().name, autoCol.getMiddle(), autoCol.getRight(), table.databaseSpecific);
 			}
+
 			gen.primaryKeyInCreateTable(sql, table.primaryKey, table.databaseSpecific);
 			gen.endTable(sql, table.group, table.name, table.databaseSpecific);
 		}
@@ -104,7 +111,7 @@ public class Generator {
 			}
 			gen.startTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
 			for (UniqueConstraint unique : table.uniqueConstraints) {
-				gen.tableUniqueConstraint(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
+				gen.tableUniqueConstraintAfter(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
 			}
 			gen.endTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
 
@@ -113,7 +120,7 @@ public class Generator {
 			}
 			gen.startTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
 			for (CheckConstraint check : table.checkConstraints) {
-				gen.tableCheckConstraint(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
+				gen.tableCheckConstraintAfter(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
 			}
 			gen.endTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
 		}
