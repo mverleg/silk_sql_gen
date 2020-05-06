@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 
 import static org.apache.commons.lang3.Validate.isTrue;
@@ -25,7 +26,7 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void prelude(@Nonnull SqlWriter sql) {
+	public void prelude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db) {
 		this.schemaName = schemaName;
 		this.silkVersion = silkVersion;
 		sql.newline();
@@ -33,14 +34,14 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void postlude(@Nonnull SqlWriter sql) {
+	public void postlude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db) {
 		sql.newline();
 		sql.comment("end schema " + schemaName);
 		sql.newline();
 	}
 
 	@Override
-	public void startTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable String description) {
+	public void startTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable String description, @Nullable DatabaseSpecific db) {
 		if (description != null) {
 			sql.comment(description);
 		}
@@ -50,7 +51,7 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name) {
+	public void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable DatabaseSpecific db) {
 		sql.addLine("}");
 	}
 
@@ -63,7 +64,8 @@ public abstract class GenericSyntax implements Syntax {
 			MetaInfo.PrimaryKey primaryKey,
 			@Nullable String autoValueName,
 			@Nullable String defaultValue,
-			boolean isLast
+			boolean isLast,
+			@Nullable DatabaseSpecific db
 	) {
 		sql.add("\t");
 		sql.add(name, dataTypeName);
@@ -87,12 +89,12 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue) {
-
+	public void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue, @Nullable DatabaseSpecific db) {
+		// Automatic values are specified inline by default.
 	}
 
 	@Override
-	public void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey) {
-
+	public void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey, @Nullable DatabaseSpecific db) {
+		// Primary key is specified inline by default.
 	}
 }

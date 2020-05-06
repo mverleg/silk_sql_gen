@@ -9,8 +9,11 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.tuple.Triple;
 
 import nl.markv.silk.parse.SilkDb;
+import nl.markv.silk.pojos.v0_1_0.CheckConstraint;
+import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.pojos.v0_1_0.Table;
+import nl.markv.silk.pojos.v0_1_0.UniqueConstraint;
 import nl.markv.silk.sql_gen.syntax.MetaInfo;
 import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
@@ -43,11 +46,22 @@ public class Generator {
 	) {
 		Syntax gen = sqlDialect.syntaxGenerator.apply(schema.name(), schema.version());
 
-		gen.prelude(sql);
+		DatabaseSpecific dbDbSpecific = schema.db().map(db -> db.databaseSpecific).orElse(null);
+		gen.prelude(sql, dbDbSpecific);
 
+		generateCreateTable(sql, schema, gen);
+
+		generateConstraints(sql, schema, gen);
+
+		generateReferences(sql, schema, gen);
+
+		gen.postlude(sql, dbDbSpecific);
+	}
+
+	private static void generateCreateTable(@Nonnull SqlWriter sql, @Nonnull SilkDb schema, Syntax gen) {
 		for (Table table : schema.tables()) {
 			sql.newline();
-			gen.startTable(sql, table.group, table.name, table.description);
+			gen.startTable(sql, table.group, table.name, table.description, table.databaseSpecific);
 			List<Triple<LongColumn, String, String>> autoColumns = new ArrayList<>();
 			for (int colNr = 0; colNr < table.columns.size(); colNr++) {
 				LongColumn column = table.columns.get(colNr);
@@ -71,16 +85,44 @@ public class Generator {
 						primaryKey,
 						autoValue,
 						column.defaultValue,
-						isLast
+						isLast,
+						table.databaseSpecific
 				);
 			}
 			for (Triple<LongColumn, String, String> autoCol : autoColumns) {
-				gen.autoValueAfterCreation(sql, autoCol.getLeft().name, autoCol.getMiddle(), autoCol.getRight());
+				gen.autoValueAfterCreation(sql, autoCol.getLeft().name, autoCol.getMiddle(), autoCol.getRight(), table.databaseSpecific);
 			}
-			gen.primaryKeyInCreateTable(sql, table.primaryKey);
-			gen.endTable(sql, table.group, table.name);
+			gen.primaryKeyInCreateTable(sql, table.primaryKey, table.databaseSpecific);
+			gen.endTable(sql, table.group, table.name, table.databaseSpecific);
 		}
+	}
 
-		gen.postlude(sql);
+	private static void generateConstraints(@Nonnull SqlWriter sql, @Nonnull SilkDb schema, Syntax gen) {
+		for (Table table : schema.tables()) {
+			if (!table.checkConstraints.isEmpty()) {
+				sql.newline();
+			}
+			gen.startTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
+			for (UniqueConstraint unique : table.uniqueConstraints) {
+				gen.tableUniqueConstraint(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
+			}
+			gen.endTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
+
+			if (!table.uniqueConstraints.isEmpty()) {
+				sql.newline();
+			}
+			gen.startTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
+			for (CheckConstraint check : table.checkConstraints) {
+				gen.tableCheckConstraint(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
+			}
+			gen.endTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
+		}
+	}
+
+	private static void generateReferences(@Nonnull SqlWriter sql, @Nonnull SilkDb schema, Syntax gen) {
+		for (Table table : schema.tables()) {
+			sql.newline();
+			//TODO @mark: schema.tables().forEach(t -> t.references);
+		}
 	}
 }
