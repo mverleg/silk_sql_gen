@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
+import nl.markv.silk.types.DataType;
 
 /**
  * A syntax converts isolated Silk schema elements to SQL statements.
@@ -21,7 +22,7 @@ public interface Syntax {
 
 	void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name);
 
-	String dataTypeName(@Nonnull SqlWriter sql, @Nonnull String type);
+	String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type);
 
 	String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue);
 

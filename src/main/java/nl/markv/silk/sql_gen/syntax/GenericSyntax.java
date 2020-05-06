@@ -5,15 +5,15 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
+import nl.markv.silk.types.DataType;
 
 /**
  * Attempt at a common version of SQL syntax.
  *
  * Dialect implementations can extend this and override only their dialect's peculiarities.
  */
-public class GenericSyntax implements Syntax {
+public abstract class GenericSyntax implements Syntax {
 
 	protected String schemaName;
 	protected String silkVersion;
@@ -54,21 +54,8 @@ public class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull String type) {
+	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
 		return null;
-	}
-
-	@Override
-	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue) {
-		switch (autoValue) {
-			case INCREMENT:
-				return "autoincrement";
-			case CREATED_TIMESTAMP:
-				return "default current_timestamp";
-			case UPDATED_TIMESTAMP:
-				return "default current_timestamp";
-		}
-		throw new UnsupportedOperationException("unknown auto data value " + autoValue);
 	}
 
 	@Override

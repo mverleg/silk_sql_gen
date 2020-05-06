@@ -15,6 +15,8 @@ import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 
+import static nl.markv.silk.parse.SilkDb.parseDataType;
+
 /**
  * Orchestrates the SQL generation, by calling syntax methods to match the Silk schema.
  */
@@ -48,7 +50,7 @@ public class Generator {
 			List<Triple<LongColumn, String, String>> autoColumns = new ArrayList<>();
 			for (LongColumn column : table.columns) {
 				String autoValue = null;
-				String dataType = gen.dataTypeName(sql, column.type);
+				String dataType = gen.dataTypeName(sql, parseDataType(column.type));
 				if (column.autoValue != null) {
 					autoValue = gen.autoValueName(sql, column.autoValue);
 					autoColumns.add(Triple.of(column, dataType, autoValue));
