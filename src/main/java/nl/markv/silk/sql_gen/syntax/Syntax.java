@@ -17,23 +17,37 @@ import nl.markv.silk.types.Table;
  */
 public interface Syntax {
 
+	interface InTableSyntax<T> {
+		void begin(@Nonnull SqlWriter sql, @Nonnull Table table);
+		void entry(@Nonnull SqlWriter sql, @Nonnull Table table, @Nonnull T entry);
+		void end(@Nonnull SqlWriter sql, @Nonnull Table table);
+	}
+
+	interface AfterTableSyntax<T> {
+		void begin(@Nonnull SqlWriter sql, @Nonnull Table table);
+		void entry(@Nonnull SqlWriter sql, @Nonnull Table table, @Nonnull T entry);
+		void end(@Nonnull SqlWriter sql, @Nonnull Table table);
+	}
+
+	@Nonnull
+	String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type);
+
+	@Nonnull
+	String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue);
+
 	void prelude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db);
 
 	void postlude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db);
 
-	void startTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable String description, @Nullable DatabaseSpecific db);
+	void startTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
 
 	void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
 
-	String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type);
-
-	String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue);
-
-	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull String name, @Nonnull String dataTypeName, boolean nullable, MetaInfo.PrimaryKey primaryKey, @Nullable String autoValueName, @Nullable String defaultValue, boolean isLast, @Nullable DatabaseSpecific db);
-
-	void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue, @Nullable DatabaseSpecific db);
+	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull Column column, @Nonnull String dataTypeName, MetaInfo.PrimaryKey primaryKey, @Nullable String autoValueName, boolean isLast, @Nullable DatabaseSpecific db);
 
 	void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey, @Nullable DatabaseSpecific db);
+
+	void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull Column column, @Nonnull String dataTypeName, @Nonnull String autoValueName, @Nullable DatabaseSpecific db);
 
 	void startTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
 
