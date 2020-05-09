@@ -6,24 +6,20 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import nl.markv.silk.sql_gen.writer.SqlWriter;
+import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.ColumnMapping;
 import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.Table;
+import nl.markv.silk.types.UniqueConstraint;
 
 /**
  * A syntax converts isolated Silk schema elements to SQL statements.
  */
 public interface Syntax {
 
-	interface InTableSyntax<T> {
-		void begin(@Nonnull SqlWriter sql, @Nonnull Table table);
-		void entry(@Nonnull SqlWriter sql, @Nonnull Table table, @Nonnull T entry);
-		void end(@Nonnull SqlWriter sql, @Nonnull Table table);
-	}
-
-	interface AfterTableSyntax<T> {
+	interface TableEntrySyntax<T> {
 		void begin(@Nonnull SqlWriter sql, @Nonnull Table table);
 		void entry(@Nonnull SqlWriter sql, @Nonnull Table table, @Nonnull T entry);
 		void end(@Nonnull SqlWriter sql, @Nonnull Table table);
@@ -43,31 +39,34 @@ public interface Syntax {
 
 	void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
 
-	void columnInCreateTable(@Nonnull SqlWriter sql, @Nonnull Column column, @Nonnull String dataTypeName, MetaInfo.PrimaryKey primaryKey, @Nullable String autoValueName, boolean isLast, @Nullable DatabaseSpecific db);
+	@Nullable
+	TableEntrySyntax<Column> columnInCreateTableSyntax();
 
-	void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey, @Nullable DatabaseSpecific db);
+	@Nullable
+	TableEntrySyntax<List<Column>> primaryKeyInCreateTableSyntax();
 
-	void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull Column column, @Nonnull String dataTypeName, @Nonnull String autoValueName, @Nullable DatabaseSpecific db);
+	@Nullable
+	TableEntrySyntax<List<Column>> addPrimaryKeyToExistingTableSyntax();
 
-	void startTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<CheckConstraint> checkInCreateTableSyntax();
 
-	void endTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<CheckConstraint> addCheckToExistingTableSyntax();
 
-	void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable String constraintName, @Nonnull List<Column> columns, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<UniqueConstraint> uniqueInCreateTableSyntax();
 
-	void tableUniqueConstraintAfter(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable String constraintName, @Nonnull List<Column> columns, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<UniqueConstraint> addUniqueToExistingTableSyntax();
 
-	void startTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<UniqueConstraint> referenceInCreateTableSyntax();
 
-	void tableCheckConstraintInline(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific);
+	@Nullable
+	TableEntrySyntax<UniqueConstraint> addReferenceToExistingTableSyntax();
 
-	void tableCheckConstraintAfter(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific);
-
-	void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
-
-	void startTableReferences(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
-
-	void endTableReferences(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific databaseSpecific);
-
-	void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull Table targetTable, @Nonnull List<ColumnMapping> columns, @Nullable DatabaseSpecific databaseSpecific);
+	final class AutoValueInfo { Column column; String dataTypeName; String autoValueName; }
+	@Nullable
+	TableEntrySyntax<AutoValueInfo> addDefaultValueToExistingTableSyntax();
 }
