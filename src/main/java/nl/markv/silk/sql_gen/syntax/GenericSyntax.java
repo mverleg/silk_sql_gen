@@ -5,20 +5,21 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import nl.markv.silk.types.ColumnMapping;
-import nl.markv.silk.types.DatabaseSpecific;
-import nl.markv.silk.types.Column;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
-import nl.markv.silk.types.DataType;
+import nl.markv.silk.types.CheckConstraint;
+import nl.markv.silk.types.Column;
+import nl.markv.silk.types.DatabaseSpecific;
+import nl.markv.silk.types.Table;
+import nl.markv.silk.types.UniqueConstraint;
 
 import static org.apache.commons.lang3.Validate.isTrue;
 
 /**
  * Attempt at a common version of SQL syntax.
  *
- * Dialect implementations can extend this and override only their dialect's peculiarities.
+ * Dialect implementations can extend this and override their dialect's peculiarities.
  */
-public class GenericSyntax implements Syntax {
+public abstract class GenericSyntax implements Syntax {
 
 	protected String schemaName;
 	protected String silkVersion;
@@ -44,136 +45,106 @@ public class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void startTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable String description, @Nullable DatabaseSpecific db) {
-		if (description != null) {
-			sql.comment(description);
+	public void startTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db) {
+		if (table.description != null) {
+			sql.comment(table.description);
 		}
 		sql.add("create table ");
-		sql.add(name);
+		sql.add(table.name);
 		sql.addLine(" {");
 	}
 
 	@Override
-	public void endTable(@Nonnull SqlWriter sql, @Nullable String group, @Nonnull String name, @Nullable DatabaseSpecific db) {
+	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db) {
 		sql.addLine("};");
 	}
 
+	@Nullable
 	@Override
-	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
-		return null;
-	}
-
-	@Override
-	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue) {
-		return null;
-	}
-
-	@Override
-	public void columnInCreateTable(
-			@Nonnull SqlWriter sql,
-			@Nonnull String name,
-			@Nonnull String dataTypeName,
-			boolean nullable,
-			MetaInfo.PrimaryKey primaryKey,
-			@Nullable String autoValueName,
-			@Nullable String defaultValue,
-			boolean isLast,
-			@Nullable DatabaseSpecific db
-	) {
-		sql.add("\t");
-		sql.add(name, dataTypeName);
-		if (primaryKey != MetaInfo.PrimaryKey.NotPart) {
-			sql.add(" primary key");
-		} else if (!nullable) {
-			sql.add(" not null");
-		}
-		if (autoValueName != null) {
-			isTrue(defaultValue == null);
-			sql.add(" ");
-			sql.add(autoValueName);
-		} else if (defaultValue != null) {
-			sql.add(" default ");
-			sql.add(defaultValue);
-		}
-//		if (!isLast) {
+	public TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax() {
+		return (sql, table, info) -> {
+			Column column = info.column;
+			sql.add("\t");
+			sql.add(column.name, info.dataTypeName);
+			if (info.primaryKey != MetaInfo.PrimaryKey.NotPart) {
+				sql.add(" primary key");
+			} else if (!column.nullable) {
+				sql.add(" not null");
+			}
+			if (info.autoValueName != null) {
+				isTrue(column.defaultValue == null);
+				sql.add(" ");
+				sql.add(info.autoValueName);
+			} else if (column.defaultValue != null) {
+				sql.add(" default ");
+				sql.add(column.defaultValue);
+			}
 			sql.add(",");
-//		}
-		sql.newline();
+			sql.newline();
+		};
 	}
 
+	@Nullable
 	@Override
-	public void autoValueAfterCreation(@Nonnull SqlWriter sql, @Nonnull String columnName, @Nonnull String dataType, @Nonnull String autoValue, @Nullable DatabaseSpecific db) {
-		// Automatic values are specified inline by default.
-	}
-
-	@Override
-	public void primaryKeyInCreateTable(@Nonnull SqlWriter sql, @Nonnull List<String> primaryKey, @Nullable DatabaseSpecific db) {
+	public TableEntrySyntax<List<Column>> primaryKeyInCreateTableSyntax() {
 		// Primary key is specified inline by default.
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void startTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
+	public TableEntrySyntax<List<Column>> addPrimaryKeyToExistingTableSyntax() {
+		// Primary key is specified inline by default.
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void endTableUniqueConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
+	public TableEntrySyntax<CheckConstraint> checkInCreateTableSyntax() {
+		return (sql, table, check) -> {
+			sql.add("\tcheck(");
+			sql.add(check.condition);
+			sql.addLine("),");
+			//TODO @mark: do something with those commas
+		};
 	}
 
+	@Nullable
 	@Override
-	public void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<ColumnMapping> columns, @Nullable DatabaseSpecific databaseSpecific) {
-		sql.add("\tunique(");
-		sql.delimitered(", ", columns);
-		sql.addLine("),");
+	public TableEntrySyntax<CheckConstraint> addCheckToExistingTableSyntax() {
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void tableUniqueConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
-		sql.add("create unique index if not exists ");
-		nameFromCols(sql, "i", tableName, columns);
-		sql.add(" on ");
-		sql.add(tableName);
-		sql.add(" (");
-		sql.delimitered(", ", columns);
-		sql.addLine(");");
+	public TableEntrySyntax<UniqueConstraint> uniqueInCreateTableSyntax() {
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void startTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
+	public TableEntrySyntax<UniqueConstraint> addUniqueToExistingTableSyntax() {
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void tableCheckConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific) {
-		sql.add("\tcheck(");
-		sql.add(condition);
-		sql.addLine("),");
+	public TableEntrySyntax<UniqueConstraint> referenceInCreateTableSyntax() {
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void tableCheckConstraintAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull String condition, @Nullable DatabaseSpecific databaseSpecific) {
+	public TableEntrySyntax<UniqueConstraint> addReferenceToExistingTableSyntax() {
+		return null;
 	}
 
+	@Nullable
 	@Override
-	public void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
+	public TableEntrySyntax<AutoValueInfo> addDefaultValueToExistingTableSyntax() {
+		return null;
 	}
 
-	@Override
-	public void startTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
-	}
-
-	@Override
-	public void endTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific) {
-		// Usually nothing to do here.
-	}
-
-	@Override
-	public void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull List<ColumnMapping> columns, @Nullable DatabaseSpecific databaseSpecific) {
-		//TODO @mark:
-	}
 
 	protected void nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
 		if (prefix != null) {

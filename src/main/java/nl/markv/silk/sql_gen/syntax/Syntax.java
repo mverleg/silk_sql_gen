@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
-import nl.markv.silk.types.ColumnMapping;
 import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.Table;
@@ -19,10 +18,11 @@ import nl.markv.silk.types.UniqueConstraint;
  */
 public interface Syntax {
 
+	@FunctionalInterface
 	interface TableEntrySyntax<T> {
-		void begin(@Nonnull SqlWriter sql, @Nonnull Table table);
+		default void begin(@Nonnull SqlWriter sql, @Nonnull Table table) {};
 		void entry(@Nonnull SqlWriter sql, @Nonnull Table table, @Nonnull T entry);
-		void end(@Nonnull SqlWriter sql, @Nonnull Table table);
+		default void end(@Nonnull SqlWriter sql, @Nonnull Table table) {};
 	}
 
 	@Nonnull
@@ -39,8 +39,9 @@ public interface Syntax {
 
 	void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
 
+	final class ColumnInfo { Column column; String dataTypeName; String autoValueName; MetaInfo.PrimaryKey primaryKey; boolean isLast; }
 	@Nullable
-	TableEntrySyntax<Column> columnInCreateTableSyntax();
+	TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax();
 
 	@Nullable
 	TableEntrySyntax<List<Column>> primaryKeyInCreateTableSyntax();

@@ -4,8 +4,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
+import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 
 public class SqliteSyntax extends GenericSyntax {
@@ -14,8 +14,9 @@ public class SqliteSyntax extends GenericSyntax {
 		super(schemaName, silkVersion);
 	}
 
+	@Nonnull
 	@Override
-	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue) {
+	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue) {
 		switch (autoValue) {
 			case INCREMENT:
 				return "autoincrement";
@@ -27,6 +28,7 @@ public class SqliteSyntax extends GenericSyntax {
 		throw new UnsupportedOperationException("unknown auto data value " + autoValue);
 	}
 
+	@Nonnull
 	@Override
 	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
 		if (type instanceof DataType.Text) {
