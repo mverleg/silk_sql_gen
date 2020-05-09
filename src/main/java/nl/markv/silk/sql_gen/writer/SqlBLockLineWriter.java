@@ -18,7 +18,7 @@ public abstract class SqlBLockLineWriter implements SqlWriter {
 
 	@Override
 	public void lineBlock(@Nonnull Runnable writeAction) {
-		needsLeadingComma = true;
+		needsLeadingComma = false;
 		writeAction.run();
 		newline();
 		needsLeadingComma = false;
@@ -27,13 +27,13 @@ public abstract class SqlBLockLineWriter implements SqlWriter {
 	@Override
 	public void line(@Nonnull Runnable writeAction) {
 		if (needsLeadingComma) {
-			needsLeadingComma = false;
-		} else {
 			add(",\n\t");
+		} else {
+			needsLeadingComma = true;
 		}
 		int oldWriteCount = writeCount;
 		writeAction.run();
-		if (writeCount != oldWriteCount) {
+		if (writeCount == oldWriteCount) {
 			needsLeadingComma = false;
 		}
 	}

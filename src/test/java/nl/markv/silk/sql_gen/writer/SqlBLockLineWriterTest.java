@@ -38,6 +38,34 @@ class SqlBLockLineWriterTest {
 	}
 
 	@Test
-	void line() {
+	void lineBlockWithoutLines() {
+		SqlStringWriter sql = new SqlStringWriter();
+		sql.addLine("(");
+		sql.lineBlock(() -> {});
+		sql.addLine(")");
+		assertEquals("(\n\n)\n", sql.build());
+	}
+
+	@Test
+	void lineBlockSingleLines() {
+		SqlStringWriter sql = new SqlStringWriter();
+		sql.addLine("(");
+		sql.lineBlock(() ->
+			sql.line(() -> sql.add("int id auto_increment"))
+		);
+		sql.addLine(")");
+		assertEquals("(\nint id auto_increment\n)\n", sql.build());
+	}
+
+	@Test
+	void lineBlockTwoLines() {
+		SqlStringWriter sql = new SqlStringWriter();
+		sql.addLine("(");
+		sql.lineBlock(() -> {
+			sql.line(() -> sql.add("int id auto_increment"));
+			sql.line(() -> sql.add("text name not null"));
+		});
+		sql.addLine(")");
+		assertEquals("(\nint id auto_increment,\n\ttext name not null\n)\n", sql.build());
 	}
 }
