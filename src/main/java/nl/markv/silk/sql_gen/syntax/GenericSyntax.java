@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import nl.markv.silk.pojos.v0_1_0.Columns;
 import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
 import nl.markv.silk.pojos.v0_1_0.LongColumn;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
@@ -157,6 +158,21 @@ public class GenericSyntax implements Syntax {
 	@Override
 	public void endTableCheckConstraints(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String name, @Nullable DatabaseSpecific databaseSpecific) {
 		// Usually nothing to do here.
+	}
+
+	@Override
+	public void startTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
+	}
+
+	@Override
+	public void endTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific) {
+		// Usually nothing to do here.
+	}
+
+	@Override
+	public void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull Columns columns, @Nullable DatabaseSpecific databaseSpecific) {
+		//TODO @mark:
 	}
 
 	protected void nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {

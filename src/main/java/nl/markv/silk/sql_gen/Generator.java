@@ -125,7 +125,7 @@ public class Generator {
 		for (Table table : schema.tables()) {
 			gen.startTableReferences(sql, table.group, table.name, table.databaseSpecific);
 			for (ForeignKey ref : table.references) {
-				gen.tableReference(sql, table.group, table.name, ref.name, ref.table, ref.columns, table.databaseSpecific);
+				gen.tableReferenceAfter(sql, table.group, table.name, ref.name, ref.table, ref.columns, table.databaseSpecific);
 			}
 			gen.endTableReferences(sql, table.group, table.name, table.databaseSpecific);
 		}

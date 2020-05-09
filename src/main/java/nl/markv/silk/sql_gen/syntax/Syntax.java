@@ -55,5 +55,5 @@ public interface Syntax {
 
 	void endTableReferences(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable DatabaseSpecific databaseSpecific);
 
-	void tableReference(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull Columns columns, @Nullable DatabaseSpecific databaseSpecific);
+	void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull Columns columns, @Nullable DatabaseSpecific databaseSpecific);
 }
