@@ -8,6 +8,18 @@ public interface SqlWriter {
 
 	void add(@Nonnull String txt);
 
+	/**
+	 * Keeps track if anything was written, and if so, automatically add semicolon and newline.
+	 */
+	void statements(@Nonnull Runnable writeAction);
+
+	/**
+	 * Create blocks of lines (for create table statements), and make sure that all lines except
+	 * the last have a trailing comma and newline.
+	 */
+	void lineBlock(@Nonnull Runnable writeAction);
+	void line(@Nonnull Runnable writeAction);
+
 	default void addLine(@Nonnull String txt) {
 		add(txt);
 		newline();
