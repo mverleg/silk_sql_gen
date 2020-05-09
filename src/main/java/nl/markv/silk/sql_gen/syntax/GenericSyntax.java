@@ -56,7 +56,7 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Override
 	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db) {
-		sql.addLine("};");
+		sql.addLine("}");
 	}
 
 	@Nullable
@@ -79,8 +79,8 @@ public abstract class GenericSyntax implements Syntax {
 				sql.add(" default ");
 				sql.add(column.defaultValue);
 			}
-			sql.add(",");
-			sql.newline();
+//			sql.add(",");
+//			sql.newline();
 		};
 	}
 
@@ -104,27 +104,42 @@ public abstract class GenericSyntax implements Syntax {
 		return (sql, table, check) -> {
 			sql.add("\tcheck(");
 			sql.add(check.condition);
-			sql.addLine("),");
-			//TODO @mark: do something with those commas
+			sql.addLine(")");
+			//TODO @mark: do something with commas
 		};
 	}
 
 	@Nullable
 	@Override
 	public TableEntrySyntax<CheckConstraint> addCheckToExistingTableSyntax() {
+		// Check is added when creating table by default.
 		return null;
 	}
 
 	@Nullable
 	@Override
 	public TableEntrySyntax<UniqueConstraint> uniqueInCreateTableSyntax() {
-		return null;
+		return (sql, table, unique) -> {
+			sql.add("\tunique(");
+			sql.delimitered(", ", unique.columnsNames);
+			sql.addLine(")");
+		};
 	}
 
 	@Nullable
 	@Override
 	public TableEntrySyntax<UniqueConstraint> addUniqueToExistingTableSyntax() {
-		return null;
+		// Unicity is added when creating table by default,
+		// but this hook is used to add an index on unique columns that don't have one.
+		return (sql, table, unique) -> {
+			sql.add("create unique index if not exists ");
+			nameFromCols(sql, "i", unique.table.name, unique.columnsNames);
+			sql.add(" on ");
+			sql.add(unique.table.name);
+			sql.add(" (");
+			sql.delimitered(", ", unique.columnsNames);
+			sql.addLine(")");
+		};
 	}
 
 	@Nullable
