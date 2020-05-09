@@ -5,9 +5,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import nl.markv.silk.pojos.v0_1_0.Columns;
-import nl.markv.silk.pojos.v0_1_0.DatabaseSpecific;
-import nl.markv.silk.pojos.v0_1_0.LongColumn;
+import nl.markv.silk.types.ColumnMapping;
+import nl.markv.silk.types.DatabaseSpecific;
+import nl.markv.silk.types.Column;
 import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.DataType;
 
@@ -64,7 +64,7 @@ public class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull LongColumn.AutoOptions autoValue) {
+	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue) {
 		return null;
 	}
 
@@ -122,7 +122,7 @@ public class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<String> columns, @Nullable DatabaseSpecific databaseSpecific) {
+	public void tableUniqueConstraintInline(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String tableName, @Nullable String constraintName, @Nonnull List<ColumnMapping> columns, @Nullable DatabaseSpecific databaseSpecific) {
 		sql.add("\tunique(");
 		sql.delimitered(", ", columns);
 		sql.addLine("),");
@@ -171,7 +171,7 @@ public class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull Columns columns, @Nullable DatabaseSpecific databaseSpecific) {
+	public void tableReferenceAfter(@Nonnull SqlWriter sql, @Nonnull String group, @Nonnull String sourceTable, @Nullable String constraintName, @Nonnull String targetTable, @Nonnull List<ColumnMapping> columns, @Nullable DatabaseSpecific databaseSpecific) {
 		//TODO @mark:
 	}
 
