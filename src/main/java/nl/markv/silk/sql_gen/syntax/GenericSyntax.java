@@ -20,6 +20,7 @@ import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static nl.markv.silk.sql_gen.sqlparts.ListEntry.listEntry;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
@@ -85,7 +86,7 @@ public abstract class GenericSyntax implements Syntax {
 			sql.append(quoted(column.name));
 			sql.append(" ");
 			sql.append(info.dataTypeName);
-			if (info.primaryKey != MetaInfo.PrimaryKey.NotPart) {
+			if (info.primaryKey == MetaInfo.PrimaryKey.Single) {
 				sql.append(" primary key");
 			} else if (info.autoValueName != null) {
 				isTrue(column.defaultValue == null);
@@ -104,9 +105,17 @@ public abstract class GenericSyntax implements Syntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<List<Column>, ListEntry>> primaryKeyInCreateTableSyntax() {
-		// Primary key is specified inline by default.
-		//TODO: perhaps this will need to change when composite primary keys are supported
-		return Optional.empty();
+		return Optional.of((table, pk) -> {
+			if (pk.size() > 1) {
+				return singletonList(listEntry(
+						"primary key(",
+						pk.stream().map(c -> quoted(c.name)).collect(Collectors.joining(", ")),
+						")"
+				));
+			} else {
+				return emptyList();
+			}
+		});
 	}
 
 	@Nonnull
@@ -190,7 +199,7 @@ public abstract class GenericSyntax implements Syntax {
 	@Nonnull
 	protected String quoted(@Nonnull String name) {
 		if (quoteNames) {
-			return "'" + name + "'";
+			return "\"" + name + "\"";
 		}
 		return name;
 	}

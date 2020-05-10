@@ -4,8 +4,13 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
+
+import static java.util.Collections.singletonList;
+import static nl.markv.silk.sql_gen.sqlparts.ListEntry.listEntry;
+import static org.apache.commons.lang3.Validate.isTrue;
 
 public class SqliteSyntax extends GenericInlineSyntax {
 
@@ -49,5 +54,34 @@ public class SqliteSyntax extends GenericInlineSyntax {
 			return "text";
 		}
 		throw new NotImplementedException("unknown type: " + type);
+	}
+
+	@Nonnull
+	@Override
+	public TableEntrySyntax<ColumnInfo, ListEntry> columnInCreateTableSyntax() {
+		return (table, info) -> {
+			StringBuilder sql = new StringBuilder();
+			Column column = info.column;
+			sql.append(quoted(column.name));
+			sql.append(" ");
+			sql.append(info.dataTypeName);
+			if (info.primaryKey == MetaInfo.PrimaryKey.Single) {
+				sql.append(" primary key");
+			}
+			if (info.primaryKey == MetaInfo.PrimaryKey.NotPart) {
+				if (info.autoValueName != null) {
+					isTrue(column.defaultValue == null);
+					sql.append(" ");
+					sql.append(info.autoValueName);
+				} else if (column.defaultValue != null) {
+					sql.append(" default ");
+					sql.append(column.defaultValue);
+				}
+			}
+			if (!column.nullable) {
+				sql.append(" not null");
+			}
+			return singletonList(listEntry(sql.toString()));
+		};
 	}
 }

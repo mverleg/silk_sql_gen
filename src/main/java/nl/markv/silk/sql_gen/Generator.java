@@ -62,7 +62,7 @@ public class Generator {
 
 		StatementCollector statements = StatementCollector.empty();
 
-		DatabaseSpecific dbDbSpecific = Optional.of(schema.db)
+		DatabaseSpecific dbDbSpecific = Optional.ofNullable(schema.db)
 				.map(db -> db.databaseSpecific).orElse(null);
 		statements.singleEmptyLine();
 		statements.add(gen.prelude(dbDbSpecific));

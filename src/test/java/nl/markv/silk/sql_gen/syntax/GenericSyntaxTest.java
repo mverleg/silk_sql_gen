@@ -25,7 +25,7 @@ class GenericSyntaxTest {
 	@Test
 	void testQuotesOn() {
 		SqliteSyntax syn = new SqliteSyntax("abc", "1.2.3", new Syntax.SyntaxOptions(true));
-		assertEquals("'My_name'", syn.quoted("My_name"));
+		assertEquals("\"My_name\"", syn.quoted("My_name"));
 	}
 
 	@Test

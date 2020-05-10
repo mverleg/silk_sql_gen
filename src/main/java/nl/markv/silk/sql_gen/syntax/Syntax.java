@@ -49,7 +49,7 @@ public interface Syntax {
 	@Nonnull
 	String dataTypeName(@Nonnull DataType type);
 
-	@Nonnull
+	@Nullable
 	String autoValueName(@Nonnull Column.AutoOptions autoValue);
 
 	@Nonnull
