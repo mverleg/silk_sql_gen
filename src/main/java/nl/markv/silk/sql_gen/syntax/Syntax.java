@@ -11,6 +11,7 @@ import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
+import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
@@ -63,10 +64,10 @@ public interface Syntax {
 	Optional<TableEntrySyntax<UniqueConstraint>> addUniqueToExistingTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<UniqueConstraint>> referenceInCreateTableSyntax();
+	Optional<TableEntrySyntax<ForeignKey>> referenceInCreateTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<UniqueConstraint>> addReferenceToExistingTableSyntax();
+	Optional<TableEntrySyntax<ForeignKey>> addReferenceToExistingTableSyntax();
 
 	@Nonnull
 	Optional<TableEntrySyntax<ColumnInfo>> changeColumnForExistingTableSyntax();

@@ -102,12 +102,12 @@ public abstract class GenericSyntax implements Syntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<CheckConstraint>> checkInCreateTableSyntax() {
-		return (sql, table, check) -> {
+		return Optional.of((sql, table, check) -> {
 			sql.add("\tcheck(");
 			sql.add(check.condition);
 			sql.addLine(")");
 			//TODO @mark: do something with commas
-		};
+		});
 	}
 
 	@Nonnull
@@ -120,11 +120,11 @@ public abstract class GenericSyntax implements Syntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<UniqueConstraint>> uniqueInCreateTableSyntax() {
-		return (sql, table, unique) -> {
+		return Optional.of((sql, table, unique) -> {
 			sql.add("\tunique(");
 			sql.delimitered(", ", unique.columnsNames);
 			sql.addLine(")");
-		};
+		});
 	}
 
 	@Nonnull
@@ -132,7 +132,7 @@ public abstract class GenericSyntax implements Syntax {
 	public Optional<TableEntrySyntax<UniqueConstraint>> addUniqueToExistingTableSyntax() {
 		// Unicity is added when creating table by default,
 		// but this hook is used to add an index on unique columns that don't have one.
-		return (sql, table, unique) -> {
+		return Optional.of((sql, table, unique) -> {
 			sql.add("create unique index if not exists ");
 			nameFromCols(sql, "i", unique.table.name, unique.columnsNames);
 			sql.add(" on ");
@@ -140,7 +140,7 @@ public abstract class GenericSyntax implements Syntax {
 			sql.add(" (");
 			sql.delimitered(", ", unique.columnsNames);
 			sql.addLine(")");
-		};
+		});
 	}
 
 	@Nonnull
@@ -160,7 +160,6 @@ public abstract class GenericSyntax implements Syntax {
 	public Optional<TableEntrySyntax<ColumnInfo>> changeColumnForExistingTableSyntax() {
 		return Optional.empty();
 	}
-
 
 	protected void nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
 		if (prefix != null) {

@@ -67,40 +67,59 @@ public class Generator {
 		for (Table table : schema.tables()) {
 			sql.newline();
 			gen.startTable(sql, table);
-			//List<Triple<Column, String, String>> autoColumns = new ArrayList<>();
-			Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnGen = gen.columnInCreateTableSyntax();
-			columnGen.begin(sql, table);
-			for (int colNr = 0; colNr < table.columns.size(); colNr++) {
-				Syntax.ColumnInfo info = new Syntax.ColumnInfo();
-				info.column = table.columns.get(colNr);
-				String autoValue = null;
-				info.dataTypeName = gen.dataTypeName(sql, info.column.type);
-				if (info.column.autoValue != null) {
-					autoValue = gen.autoValueName(sql, info.column.autoValue);
-					//autoColumns.add(Triple.of(info.column, dataType, autoValue));
+			generateColumns(sql, gen, table);
+			gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn -> {
+				primaryKeySyn.begin(sql, table);
+				primaryKeySyn.entry(sql, table, table.primaryKey);
+				primaryKeySyn.end(sql, table);
+			});
+			gen.checkInCreateTableSyntax().ifPresent(checkSyn -> {
+				checkSyn.begin(sql, table);
+				for (CheckConstraint check : table.checkConstraints) {
+					checkSyn.entry(sql, table, check);
 				}
-				info.isLast = colNr == table.columns.size() - 1;
-				info.primaryKey = MetaInfo.PrimaryKey.NotPart;
-				if (table.primaryKeyNames.contains(info.column.name)) {
-					info.primaryKey = table.primaryKey.size() == 1 ?
-							MetaInfo.PrimaryKey.Single : MetaInfo.PrimaryKey.Composite;
+				checkSyn.end(sql, table);
+			});
+			gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn -> {
+				uniqueSyn.begin(sql, table);
+				for (UniqueConstraint unique : table.uniqueConstraints) {
+					uniqueSyn.entry(sql, table, unique);
 				}
-				columnGen.entry(sql, table, info);
-			}
-			columnGen.end(sql, table);
-			for (UniqueConstraint unique : table.uniqueConstraints) {
-				gen.tableUniqueConstraintInline(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
-			}
-			for (CheckConstraint check : table.checkConstraints) {
-				gen.tableCheckConstraintInline(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
-			}
-//			for (Triple<Column, String, String> autoCol : autoColumns) {
-//				gen.autoValueAfterCreation(sql, autoCol.getLeft().name, autoCol.getMiddle(), autoCol.getRight(), table.databaseSpecific);
-//			}
-
-			gen.primaryKeyInCreateTable(sql, table.primaryKey, table.databaseSpecific);
-			gen.endTable(sql, table.group, table.name, table.databaseSpecific);
+				uniqueSyn.end(sql, table);
+			});
+			gen.referenceInCreateTableSyntax().ifPresent(referenceSyn -> {
+				referenceSyn.begin(sql, table);
+				for (ForeignKey reference : table.references) {
+					referenceSyn.entry(sql, table, reference);
+				}
+				referenceSyn.end(sql, table);
+			});
+			gen.endTable(sql, table);
+			gen.changeColumnForExistingTableSyntax();
 		}
+	}
+
+	private static void generateColumns(@Nonnull SqlWriter sql, @Nonnull Syntax gen, @Nonnull Table table) {
+		Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnGen = gen.columnInCreateTableSyntax();
+		columnGen.begin(sql, table);
+		for (int colNr = 0; colNr < table.columns.size(); colNr++) {
+			Syntax.ColumnInfo info = new Syntax.ColumnInfo();
+			info.column = table.columns.get(colNr);
+			String autoValue = null;
+			info.dataTypeName = gen.dataTypeName(sql, info.column.type);
+			if (info.column.autoValue != null) {
+				autoValue = gen.autoValueName(sql, info.column.autoValue);
+				//autoColumns.add(Triple.of(info.column, dataType, autoValue));
+			}
+			info.isLast = colNr == table.columns.size() - 1;
+			info.primaryKey = MetaInfo.PrimaryKey.NotPart;
+			if (table.primaryKeyNames.contains(info.column.name)) {
+				info.primaryKey = table.primaryKey.size() == 1 ?
+						MetaInfo.PrimaryKey.Single : MetaInfo.PrimaryKey.Composite;
+			}
+			columnGen.entry(sql, table, info);
+		}
+		columnGen.end(sql, table);
 	}
 
 	private static void generateConstraints(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, Syntax gen) {
