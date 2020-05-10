@@ -1,6 +1,7 @@
 package nl.markv.silk.sql_gen.syntax;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -43,31 +44,30 @@ public interface Syntax {
 	@Nonnull
 	TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<List<Column>> primaryKeyInCreateTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<List<Column>>> primaryKeyInCreateTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<List<Column>> addPrimaryKeyToExistingTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<List<Column>>> addPrimaryKeyToExistingTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<CheckConstraint> checkInCreateTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<CheckConstraint>> checkInCreateTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<CheckConstraint> addCheckToExistingTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<CheckConstraint>> addCheckToExistingTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<UniqueConstraint> uniqueInCreateTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<UniqueConstraint>> uniqueInCreateTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<UniqueConstraint> addUniqueToExistingTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<UniqueConstraint>> addUniqueToExistingTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<UniqueConstraint> referenceInCreateTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<UniqueConstraint>> referenceInCreateTableSyntax();
 
-	@Nullable
-	TableEntrySyntax<UniqueConstraint> addReferenceToExistingTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<UniqueConstraint>> addReferenceToExistingTableSyntax();
 
-	final class AutoValueInfo { public Column column; public String dataTypeName; public String autoValueName; }
-	@Nullable
-	TableEntrySyntax<AutoValueInfo> addDefaultValueToExistingTableSyntax();
+	@Nonnull
+	Optional<TableEntrySyntax<ColumnInfo>> changeColumnForExistingTableSyntax();
 }

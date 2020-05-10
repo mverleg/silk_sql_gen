@@ -1,6 +1,7 @@
 package nl.markv.silk.sql_gen.syntax;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -84,23 +85,23 @@ public abstract class GenericSyntax implements Syntax {
 		};
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<List<Column>> primaryKeyInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<List<Column>>> primaryKeyInCreateTableSyntax() {
 		// Primary key is specified inline by default.
-		return null;
+		return Optional.empty();
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<List<Column>> addPrimaryKeyToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<List<Column>>> addPrimaryKeyToExistingTableSyntax() {
 		// Primary key is specified inline by default.
-		return null;
+		return Optional.empty();
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<CheckConstraint> checkInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<CheckConstraint>> checkInCreateTableSyntax() {
 		return (sql, table, check) -> {
 			sql.add("\tcheck(");
 			sql.add(check.condition);
@@ -109,16 +110,16 @@ public abstract class GenericSyntax implements Syntax {
 		};
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<CheckConstraint> addCheckToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<CheckConstraint>> addCheckToExistingTableSyntax() {
 		// Check is added when creating table by default.
-		return null;
+		return Optional.empty();
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<UniqueConstraint> uniqueInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<UniqueConstraint>> uniqueInCreateTableSyntax() {
 		return (sql, table, unique) -> {
 			sql.add("\tunique(");
 			sql.delimitered(", ", unique.columnsNames);
@@ -126,9 +127,9 @@ public abstract class GenericSyntax implements Syntax {
 		};
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<UniqueConstraint> addUniqueToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<UniqueConstraint>> addUniqueToExistingTableSyntax() {
 		// Unicity is added when creating table by default,
 		// but this hook is used to add an index on unique columns that don't have one.
 		return (sql, table, unique) -> {
@@ -142,22 +143,22 @@ public abstract class GenericSyntax implements Syntax {
 		};
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<UniqueConstraint> referenceInCreateTableSyntax() {
-		return null;
+	public Optional<TableEntrySyntax<UniqueConstraint>> referenceInCreateTableSyntax() {
+		return Optional.empty();
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<UniqueConstraint> addReferenceToExistingTableSyntax() {
-		return null;
+	public Optional<TableEntrySyntax<UniqueConstraint>> addReferenceToExistingTableSyntax() {
+		return Optional.empty();
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
-	public TableEntrySyntax<AutoValueInfo> addDefaultValueToExistingTableSyntax() {
-		return null;
+	public Optional<TableEntrySyntax<ColumnInfo>> changeColumnForExistingTableSyntax() {
+		return Optional.empty();
 	}
 
 
