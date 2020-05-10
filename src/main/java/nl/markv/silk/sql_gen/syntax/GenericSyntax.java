@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,11 +15,14 @@ import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
+import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.Table;
+import nl.markv.silk.types.UniqueConstraint;
 
 import static java.util.Collections.singletonList;
 import static nl.markv.silk.sql_gen.sqlparts.ListEntry.listEntry;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
+import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
 import static org.apache.commons.lang3.Validate.isTrue;
 
 /**
@@ -101,6 +105,45 @@ public abstract class GenericSyntax implements Syntax {
 		// Primary key is specified inline by default.
 		//TODO: perhaps this will need to change when composite primary keys are supported
 		return Optional.empty();
+	}
+
+	@Nonnull
+	@Override
+	public Optional<TableEntrySyntax<UniqueConstraint, Statement>> addUniqueToExistingTableSyntax() {
+		// Unicity is added when creating table by default,
+		// but this hook is used to add an index on unique columns that don't have one.
+		return Optional.of((table, unique) -> singletonList(statement(
+				"create unique index if not exists ",
+				quoted(nameFromCols("i", unique.table.name, unique.columnsNames)),
+				" on ",
+				quoted(table.name),
+				" (",
+				unique.columnsNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
+				")"
+		)));
+	}
+
+	@Nonnull
+	@Override
+	public Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax() {
+		// Foreign keys are added when creating table by default,
+		// but this hook is used to add an index on columns that are references by a foreign key.
+		// This happens after unique constraint indices, so if both apply, the unique index prevails.
+		return Optional.of((table, fk) -> {
+			//TODO @mark: getting list of names happens repeatedly, perhaps put it in Silk itself
+			List<String> fkTargetColNames = fk.toColumns().stream()
+					.map(c -> c.name)
+					.collect(Collectors.toList());
+			return singletonList(statement(
+					"create index if not exists ",
+					quoted(nameFromCols("i", fk.targetTableName, fkTargetColNames)),
+					" on ",
+					quoted(table.name),
+					" (",
+					fkTargetColNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
+					")"
+			));
+		});
 	}
 
 	@Nonnull

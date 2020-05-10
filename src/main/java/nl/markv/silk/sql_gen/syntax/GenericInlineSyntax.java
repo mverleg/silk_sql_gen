@@ -55,22 +55,6 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint, Statement>> addUniqueToExistingTableSyntax() {
-		// Unicity is added when creating table by default,
-		// but this hook is used to add an index on unique columns that don't have one.
-		return Optional.of((table, unique) -> singletonList(statement(
-			"create unique index if not exists ",
-			quoted(nameFromCols("i", unique.table.name, unique.columnsNames)),
-			" on ",
-			quoted(table.name),
-			" (",
-			unique.columnsNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
-			")"
-		)));
-	}
-
-	@Nonnull
-	@Override
 	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
 		return Optional.of((table, fk) -> singletonList(listEntry(
 				"foreign key (",
@@ -85,13 +69,6 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 						.collect(Collectors.joining(", ")),
 				")"
 		)));
-	}
-
-	@Nonnull
-	@Override
-	public Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax() {
-		//TODO @mark: create an index
-		return Optional.empty();
 	}
 
 	@Nonnull

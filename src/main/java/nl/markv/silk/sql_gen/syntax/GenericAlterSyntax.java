@@ -39,7 +39,7 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 				quoted(table.name),
 				" add constraint ",
 				quoted(check.name == null ? nameFromHash("c_" + table.name, check.condition) : check.name),
-				"check (",
+				" check (",
 				check.condition,
 				")"
 		)));
@@ -52,22 +52,6 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 				"unique(",
 				String.join(", ", unique.columnsNames),
 				")"
-		)));
-	}
-
-	@Nonnull
-	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint, Statement>> addUniqueToExistingTableSyntax() {
-		// Unicity is added when creating table by default,
-		// but this hook is used to add an index on unique columns that don't have one.
-		return Optional.of((table, unique) -> singletonList(statement(
-			"create unique index if not exists ",
-			quoted(nameFromCols("i", unique.table.name, unique.columnsNames)),
-			" on ",
-			quoted(table.name),
-			" (",
-			unique.columnsNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
-			")"
 		)));
 	}
 
@@ -87,12 +71,6 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 						.collect(Collectors.joining(", ")),
 				")"
 		)));
-	}
-
-	@Nonnull
-	@Override
-	public Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax() {
-		return Optional.empty();
 	}
 
 	@Nonnull
