@@ -1,5 +1,6 @@
 package nl.markv.silk.sql_gen.syntax;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,9 +24,12 @@ public interface Syntax {
 
 	@FunctionalInterface
 	interface TableEntrySyntax<T, U> {
-		default List<U> begin(@Nonnull Table table) {};
+		@Nonnull
+		default List<U> begin(@Nonnull Table table) { return Collections.emptyList(); };
+		@Nonnull
 		List<U> entry(@Nonnull Table table, @Nonnull T entry);
-		default List<U> end(@Nonnull Table table) {};
+		@Nonnull
+		default List<U> end(@Nonnull Table table) { return Collections.emptyList(); };
 	}
 
 	@Nonnull
@@ -46,7 +50,6 @@ public interface Syntax {
 	@Nonnull
 	List<String> endTable(@Nonnull Table table);
 
-	final class ColumnInfo { public Column column; public String dataTypeName; public String autoValueName; public MetaInfo.PrimaryKey primaryKey; public boolean isLast; }
 	@Nonnull
 	TableEntrySyntax<ColumnInfo, ListEntry> columnInCreateTableSyntax();
 
@@ -54,26 +57,40 @@ public interface Syntax {
 	Optional<TableEntrySyntax<List<Column>, ListEntry>> primaryKeyInCreateTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<List<Column>, List<Statement>>> addPrimaryKeyToExistingTableSyntax();
+	Optional<TableEntrySyntax<List<Column>, Statement>> addPrimaryKeyToExistingTableSyntax();
 
 	@Nonnull
 	Optional<TableEntrySyntax<CheckConstraint, ListEntry>> checkInCreateTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<CheckConstraint, List<Statement>>> addCheckToExistingTableSyntax();
+	Optional<TableEntrySyntax<CheckConstraint, Statement>> addCheckToExistingTableSyntax();
 
 	@Nonnull
 	Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<UniqueConstraint, List<Statement>>> addUniqueToExistingTableSyntax();
+	Optional<TableEntrySyntax<UniqueConstraint, Statement>> addUniqueToExistingTableSyntax();
 
 	@Nonnull
 	Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<ForeignKey, List<Statement>>> addReferenceToExistingTableSyntax();
+	Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax();
 
 	@Nonnull
-	Optional<TableEntrySyntax<ColumnInfo, List<Statement>>> changeColumnForExistingTableSyntax();
+	Optional<TableEntrySyntax<ColumnInfo, Statement>> changeColumnForExistingTableSyntax();
+
+	final class ColumnInfo {
+		@Nonnull public final Column column;
+		@Nonnull public final String dataTypeName;
+		@Nullable public final String autoValueName;
+		@Nonnull public final MetaInfo.PrimaryKey primaryKey;
+
+		public ColumnInfo(@Nonnull Column column, @Nonnull String dataTypeName, @Nullable String autoValueName, @Nonnull MetaInfo.PrimaryKey primaryKey) {
+			this.column = column;
+			this.dataTypeName = dataTypeName;
+			this.autoValueName = autoValueName;
+			this.primaryKey = primaryKey;
+		}
+	}
 }

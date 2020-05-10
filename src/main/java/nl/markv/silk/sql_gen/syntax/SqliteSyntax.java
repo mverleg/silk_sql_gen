@@ -4,7 +4,6 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 
@@ -16,7 +15,7 @@ public class SqliteSyntax extends GenericSyntax {
 
 	@Nonnull
 	@Override
-	public String autoValueName(@Nonnull SqlWriter sql, @Nonnull Column.AutoOptions autoValue) {
+	public String autoValueName(@Nonnull Column.AutoOptions autoValue) {
 		switch (autoValue) {
 			case INCREMENT:
 				return "autoincrement";
@@ -30,7 +29,7 @@ public class SqliteSyntax extends GenericSyntax {
 
 	@Nonnull
 	@Override
-	public String dataTypeName(@Nonnull SqlWriter sql, @Nonnull DataType type) {
+	public String dataTypeName(@Nonnull DataType type) {
 		if (type instanceof DataType.Text) {
 			return "text";
 		}

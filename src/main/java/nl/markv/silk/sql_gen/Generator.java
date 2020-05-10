@@ -43,7 +43,7 @@ public class Generator {
 	}
 
 	public static void generate(
-			@Nonnull SqlWriter sql,
+			@Nonnull StringBuilder sql,
 			@Nonnull SilkSchema schema,
 			@Nonnull Dialect sqlDialect
 	) {

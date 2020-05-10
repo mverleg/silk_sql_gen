@@ -15,6 +15,11 @@ public interface ListEntry {
 
 	@Nonnull
 	static ListEntry of(@Nonnull String... messageParts) {
+		return listEntry(messageParts);
+	}
+
+	@Nonnull
+	static ListEntry listEntry(@Nonnull String... messageParts) {
 		assert messageParts.length >= 1;
 		int last = messageParts.length - 1;
 		assert !messageParts[0].startsWith("--"): "use `comment` method for comments";

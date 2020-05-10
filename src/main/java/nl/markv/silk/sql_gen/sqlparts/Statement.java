@@ -15,6 +15,11 @@ public interface Statement {
 
 	@Nonnull
 	static Statement of(@Nonnull String... messageParts) {
+		return statement(messageParts);
+	}
+
+	@Nonnull
+	static Statement statement(@Nonnull String... messageParts) {
 		assert messageParts.length >= 1;
 		int last = messageParts.length - 1;
 		assert !messageParts[0].startsWith("--"): "use `comment` method for comments";
