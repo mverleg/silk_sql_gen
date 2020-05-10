@@ -9,8 +9,8 @@ import nl.markv.silk.types.DataType;
 
 public class SqliteSyntax extends GenericSyntax {
 
-	public SqliteSyntax(@Nonnull String schemaName, @Nonnull String silkVersion) {
-		super(schemaName, silkVersion);
+	public SqliteSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull Syntax.SyntaxOptions options) {
+		super(schemaName, silkVersion, options);
 	}
 
 	@Nonnull

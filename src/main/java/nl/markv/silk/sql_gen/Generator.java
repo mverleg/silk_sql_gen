@@ -43,12 +43,12 @@ public class Generator {
 //		DB2(DB2Syntax::new)
 		;
 
-		public final BiFunction<String, String, Syntax> syntaxGenerator;
+		public final Syntax.SyntaxConstructor syntaxGenerator;
 
 		/**
 		 * @param syntaxGenerator Construct a syntax object from schemaName and silkVersion respectively.
 		 */
-		Dialect(@Nonnull BiFunction<String, String, Syntax> syntaxGenerator) {
+		Dialect(@Nonnull Syntax.SyntaxConstructor syntaxGenerator) {
 			this.syntaxGenerator = syntaxGenerator;
 		}
 	}
@@ -56,9 +56,10 @@ public class Generator {
 	public static void generate(
 			@Nonnull StringBuilder sql,
 			@Nonnull SilkSchema schema,
-			@Nonnull Dialect sqlDialect
+			@Nonnull Dialect sqlDialect,
+			@Nonnull Syntax.SyntaxOptions options
 	) {
-		Syntax gen = sqlDialect.syntaxGenerator.apply(schema.name(), schema.silkVersion);
+		Syntax gen = sqlDialect.syntaxGenerator.create(schema.name(), schema.silkVersion, options);
 
 		StatementCollector statements = StatementCollector.empty();
 

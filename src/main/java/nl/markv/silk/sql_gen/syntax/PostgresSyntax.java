@@ -4,8 +4,8 @@ import javax.annotation.Nonnull;
 
 public abstract class PostgresSyntax extends GenericSyntax {
 
-	public PostgresSyntax(@Nonnull String schemaName, @Nonnull String silkVersion) {
-		super(schemaName, silkVersion);
+	public PostgresSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull Syntax.SyntaxOptions options) {
+		super(schemaName, silkVersion, options);
 	}
 
 }

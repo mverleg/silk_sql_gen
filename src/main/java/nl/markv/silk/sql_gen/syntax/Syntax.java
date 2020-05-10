@@ -22,6 +22,20 @@ import nl.markv.silk.types.UniqueConstraint;
  */
 public interface Syntax {
 
+	class SyntaxOptions {
+		final boolean quoteNames;
+
+		public SyntaxOptions(boolean quoteNames) {
+			this.quoteNames = quoteNames;
+		}
+	}
+
+	@FunctionalInterface
+	interface SyntaxConstructor {
+		@Nonnull
+		Syntax create(@Nonnull String schemaName, @Nonnull String silkVersion, SyntaxOptions options);
+	}
+
 	@FunctionalInterface
 	interface TableEntrySyntax<T, U> {
 		@Nonnull

@@ -30,12 +30,14 @@ import static org.apache.commons.lang3.Validate.isTrue;
  */
 public abstract class GenericSyntax implements Syntax {
 
+	private final boolean quoteNames;
 	protected String schemaName;
 	protected String silkVersion;
 
-	public GenericSyntax(@Nonnull String schemaName, @Nonnull String silkVersion) {
+	public GenericSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull Syntax.SyntaxOptions options) {
 		this.schemaName = schemaName;
 		this.silkVersion = silkVersion;
+		this.quoteNames = options.quoteNames;
 	}
 
 	@Override
