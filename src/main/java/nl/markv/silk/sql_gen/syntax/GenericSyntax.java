@@ -3,6 +3,7 @@ package nl.markv.silk.sql_gen.syntax;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -148,7 +149,19 @@ public abstract class GenericSyntax implements Syntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
-		return Optional.empty();
+		return Optional.of((table, fk) -> singletonList(listEntry(
+				"foreign key ('",
+				fk.fromColumns().stream()
+						.map(c -> c.name)
+						.collect(Collectors.joining("', '")),
+				"') references '",
+				fk.targetTableName,
+				"' ('",
+				fk.toColumns().stream()
+						.map(c -> c.name)
+						.collect(Collectors.joining("', '")),
+				"')"
+		)));
 	}
 
 	@Nonnull
