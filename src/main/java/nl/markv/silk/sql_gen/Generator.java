@@ -114,7 +114,7 @@ public class Generator {
 				.map(referenceSyn -> generateReference(referenceSyn, table))
 				.orElse(Collections.emptyList()));
 		statements.add(statement(
-				gen.startTable(table),
+				gen.startTable(table) + "\n",
 				entriesText(entries),
 				gen.endTable(table)
 		));
@@ -187,7 +187,7 @@ public class Generator {
 	private static Pair<List<ListEntry>, List<Syntax.ColumnInfo>> generateColumns(@Nonnull Syntax gen, @Nonnull Table table) {
 		List<ListEntry> entries = new ArrayList<>();
 		Syntax.TableEntrySyntax<Syntax.ColumnInfo, ListEntry> columnGen = gen.columnInCreateTableSyntax();
-		columnGen.begin(table);
+		entries.addAll(columnGen.begin(table));
 		List<Syntax.ColumnInfo> columnInfos = new ArrayList<>();
 		for (int colNr = 0; colNr < table.columns.size(); colNr++) {
 			Column column = table.columns.get(colNr);
@@ -203,9 +203,9 @@ public class Generator {
 					primaryKey
 			);
 			columnInfos.add(info);
-			columnGen.entry(table, info);
+			entries.addAll(columnGen.entry(table, info));
 		}
-		columnGen.end(table);
+		entries.addAll(columnGen.end(table));
 		return Pair.of(entries, columnInfos);
 	}
 }

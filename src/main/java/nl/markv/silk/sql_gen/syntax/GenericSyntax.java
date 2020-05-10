@@ -67,7 +67,9 @@ public abstract class GenericSyntax implements Syntax {
 		return (table, info) -> {
 			StringBuilder sql = new StringBuilder();
 			Column column = info.column;
+			sql.append("'");
 			sql.append(column.name);
+			sql.append("' ");
 			sql.append(info.dataTypeName);
 			if (info.primaryKey != MetaInfo.PrimaryKey.NotPart) {
 				sql.append(" primary key");
@@ -121,9 +123,9 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	public Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax() {
 		return Optional.of((table, unique) -> singletonList(listEntry(
-				"unique(",
-				String.join(", ", unique.columnsNames),
-				")"
+				"unique('",
+				String.join("', '", unique.columnsNames),
+				"')"
 		)));
 	}
 
@@ -137,9 +139,9 @@ public abstract class GenericSyntax implements Syntax {
 			nameFromCols("i", unique.table.name, unique.columnsNames),
 			"' on '",
 			table.name,
-			"' (",
-			String.join(", ", unique.columnsNames),
-			")"
+			"' ('",
+			String.join("', '", unique.columnsNames),
+			"')"
 		)));
 	}
 

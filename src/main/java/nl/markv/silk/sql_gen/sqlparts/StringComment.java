@@ -22,9 +22,10 @@ public class StringComment implements Statement, ListEntry {
 
 	@Override
 	public void statementText(@Nonnull StringBuilder sql) {
+		sql.append("-- ");
 		for (String msg : messageParts) {
 			sql.append(msg);
 		}
-		sql.append(";\n");
+		sql.append("\n");
 	}
 }
