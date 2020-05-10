@@ -7,7 +7,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 
-public class SqliteSyntax extends GenericSyntax {
+public class SqliteSyntax extends GenericInlineSyntax {
 
 	public SqliteSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull Syntax.SyntaxOptions options) {
 		super(schemaName, silkVersion, options);
