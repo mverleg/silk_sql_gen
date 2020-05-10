@@ -6,7 +6,6 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
