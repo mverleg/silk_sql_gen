@@ -58,15 +58,11 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
 		return Optional.of((table, fk) -> singletonList(listEntry(
 				"foreign key (",
-				fk.fromColumns().stream()
-						.map(c -> quoted(c.name))
-						.collect(Collectors.joining(", ")),
+				String.join(", ", fk.sourceColumns(c -> quoted(c.name))),
 				") references ",
 				quoted(fk.targetTableName),
 				" (",
-				fk.toColumns().stream()
-						.map(c -> quoted(c.name))
-						.collect(Collectors.joining(", ")),
+				String.join(", ", fk.targetColumns(c -> quoted(c.name))),
 				")"
 		)));
 	}

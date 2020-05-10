@@ -8,6 +8,9 @@ import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 
 public class PostgresSyntax extends GenericAlterSyntax {
+	// Hint: to start a quick docker database for testing, use
+	// docker run --tmpfs=/pgtmpfs:size=500M -p5432:5432 -e PGDATA=/pgtmpfs -e POSTGRES_PASSWORD=test postgres:12
+	// then connect to jdbc:postgresql://localhost:5432/postgres using credentials postgres:test
 
 	public PostgresSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull Syntax.SyntaxOptions options) {
 		super(schemaName, silkVersion, options);
@@ -43,5 +46,14 @@ public class PostgresSyntax extends GenericAlterSyntax {
 			return "text";
 		}
 		throw new NotImplementedException("unknown type: " + type);
+	}
+
+	@Nonnull
+	@Override
+	protected String quoted(@Nonnull String name) {
+		if (quoteNames) {
+			return "\"" + name + "\"";
+		}
+		return name;
 	}
 }

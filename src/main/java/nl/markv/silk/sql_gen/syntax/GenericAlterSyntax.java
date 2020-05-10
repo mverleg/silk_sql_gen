@@ -48,8 +48,19 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax() {
-		return Optional.of((table, unique) -> singletonList(listEntry(
-				"unique(",
+		// Unique constraints are added after table creation.
+		return Optional.empty();
+	}
+
+	@Nonnull
+	@Override
+	public Optional<TableEntrySyntax<UniqueConstraint, Statement>> addUniqueToExistingTableSyntax() {
+		return Optional.of((table, unique) -> singletonList(statement(
+				"alter table ",
+				quoted(table.name),
+				" add constraint ",
+				quoted(unique.name == null ? nameFromCols("u_", table.name, unique.columnsNames) : unique.name),
+				" unique(",
 				String.join(", ", unique.columnsNames),
 				")"
 		)));
@@ -58,17 +69,26 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
-		return Optional.of((table, fk) -> singletonList(listEntry(
-				"foreign key (",
-				fk.fromColumns().stream()
-						.map(c -> quoted(c.name))
-						.collect(Collectors.joining(", ")),
+		// Foreign keys are added after table creation.
+		return Optional.empty();
+	}
+
+	@Nonnull
+	@Override
+	public Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax() {
+		return Optional.of((table, fk) -> singletonList(statement(
+				"alter table ",
+				quoted(fk.sourceTable.name),
+				" add constraint ",
+				quoted(fk.name != null ? fk.name : nameFromHash(
+						"f_" + table.name + "_" + fk.sourceTable,
+						String.join("_", fk.sourceColumns(c -> c.name)))),
+				" foreign key (",
+				String.join(", ", fk.sourceColumns(c -> quoted(c.name))),
 				") references ",
 				quoted(fk.targetTableName),
 				" (",
-				fk.toColumns().stream()
-						.map(c -> quoted(c.name))
-						.collect(Collectors.joining(", ")),
+				String.join(", ", fk.targetColumns(c -> quoted(c.name))),
 				")"
 		)));
 	}

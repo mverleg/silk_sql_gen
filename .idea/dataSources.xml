@@ -7,5 +7,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:/tmp/test.sqlite</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="PostgreSQL (docker)" uuid="cc9079a8-9e51-4d8f-957a-1fc893f118a2">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/postgres</jdbc-url>
+    </data-source>
   </component>
 </project>

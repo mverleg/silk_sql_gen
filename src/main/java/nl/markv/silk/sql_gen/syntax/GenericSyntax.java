@@ -129,21 +129,15 @@ public abstract class GenericSyntax implements Syntax {
 		// Foreign keys are added when creating table by default,
 		// but this hook is used to add an index on columns that are references by a foreign key.
 		// This happens after unique constraint indices, so if both apply, the unique index prevails.
-		return Optional.of((table, fk) -> {
-			//TODO @mark: getting list of names happens repeatedly, perhaps put it in Silk itself
-			List<String> fkTargetColNames = fk.toColumns().stream()
-					.map(c -> c.name)
-					.collect(Collectors.toList());
-			return singletonList(statement(
-					"create index if not exists ",
-					quoted(nameFromCols("i", fk.targetTableName, fkTargetColNames)),
-					" on ",
-					quoted(table.name),
-					" (",
-					fkTargetColNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
-					")"
-			));
-		});
+		return Optional.of((table, fk) -> singletonList(statement(
+				"create index if not exists ",
+				quoted(nameFromCols("i", fk.targetTableName, fk.targetColumns(c -> c.name))),
+				" on ",
+				quoted(table.name),
+				" (",
+				String.join(", ", fk.targetColumns(c1 -> quoted(c1.name))),
+				")"
+		)));
 	}
 
 	@Nonnull
