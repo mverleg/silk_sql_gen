@@ -75,20 +75,21 @@ public class Generator {
 					.orElse(Collections.emptyList()));
 		});
 		schema.tables().forEach(table -> {
-			statements.add(gen.addPrimaryKeyToExistingTableSyntax()
+			statements.addAfterLine(gen.addPrimaryKeyToExistingTableSyntax()
 					.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
 					.orElse(Collections.emptyList()));
-			statements.add(gen.addCheckToExistingTableSyntax()
+			statements.addAfterLine(gen.addCheckToExistingTableSyntax()
 					.map(checkSyn -> generateChecks(checkSyn, table))
 					.orElse(Collections.emptyList()));
-			statements.add(gen.addUniqueToExistingTableSyntax()
+			statements.addAfterLine(gen.addUniqueToExistingTableSyntax()
 					.map(uniqueSyn -> generateUnique(uniqueSyn, table))
 					.orElse(Collections.emptyList()));
-			statements.add(gen.addReferenceToExistingTableSyntax()
+			statements.addAfterLine(gen.addReferenceToExistingTableSyntax()
 					.map(referenceSyn -> generateReference(referenceSyn, table))
 					.orElse(Collections.emptyList()));
 		});
 
+		statements.add(emptyLine());
 		statements.add(gen.postlude(dbDbSpecific));
 		statements.add(emptyLine());
 

@@ -1,6 +1,5 @@
 package nl.markv.silk.sql_gen.syntax;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,7 +54,7 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	@Nonnull
 	public String startTable(@Nonnull Table table) {
-		return "create table '" + table.name + "' (";
+		return "create table " + quoted(table.name) + " (";
 	}
 
 	@Override
@@ -70,9 +69,8 @@ public abstract class GenericSyntax implements Syntax {
 		return (table, info) -> {
 			StringBuilder sql = new StringBuilder();
 			Column column = info.column;
-			sql.append("'");
-			sql.append(column.name);
-			sql.append("' ");
+			sql.append(quoted(column.name));
+			sql.append(" ");
 			sql.append(info.dataTypeName);
 			if (info.primaryKey != MetaInfo.PrimaryKey.NotPart) {
 				sql.append(" primary key");
@@ -126,9 +124,9 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	public Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax() {
 		return Optional.of((table, unique) -> singletonList(listEntry(
-				"unique('",
-				String.join("', '", unique.columnsNames),
-				"')"
+				"unique(",
+				String.join(", ", unique.columnsNames),
+				")"
 		)));
 	}
 
@@ -138,13 +136,13 @@ public abstract class GenericSyntax implements Syntax {
 		// Unicity is added when creating table by default,
 		// but this hook is used to add an index on unique columns that don't have one.
 		return Optional.of((table, unique) -> singletonList(statement(
-			"create unique index if not exists '",
+			"create unique index if not exists ",
 			nameFromCols("i", unique.table.name, unique.columnsNames),
-			"' on '",
-			table.name,
-			"' ('",
-			String.join("', '", unique.columnsNames),
-			"')"
+			" on ",
+			quoted(table.name),
+			" (",
+			unique.columnsNames.stream().map(n -> quoted(n)).collect(Collectors.joining(", ")),
+			")"
 		)));
 	}
 
@@ -152,17 +150,17 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
 		return Optional.of((table, fk) -> singletonList(listEntry(
-				"foreign key ('",
+				"foreign key (",
 				fk.fromColumns().stream()
-						.map(c -> c.name)
-						.collect(Collectors.joining("', '")),
-				"') references '",
-				fk.targetTableName,
-				"' ('",
+						.map(c -> quoted(c.name))
+						.collect(Collectors.joining(", ")),
+				") references ",
+				quoted(fk.targetTableName),
+				" (",
 				fk.toColumns().stream()
-						.map(c -> c.name)
-						.collect(Collectors.joining("', '")),
-				"')"
+						.map(c -> quoted(c.name))
+						.collect(Collectors.joining(", ")),
+				")"
 		)));
 	}
 
@@ -197,5 +195,13 @@ public abstract class GenericSyntax implements Syntax {
 			sql.append(col);
 		}
 		return sql.toString();
+	}
+
+	@Nonnull
+	protected String quoted(@Nonnull String name) {
+		if (quoteNames) {
+			return "'" + name + "'";
+		}
+		return name;
 	}
 }

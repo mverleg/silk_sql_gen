@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
+import static nl.markv.silk.sql_gen.sqlparts.StringEmptyLine.emptyLine;
+
 public class StatementCollector {
 
 	@Nonnull
@@ -24,6 +26,13 @@ public class StatementCollector {
 
 	public void add(@Nonnull Collection<Statement> newStatements) {
 		statements.addAll(newStatements);
+	}
+
+	public void addAfterLine(@Nonnull Collection<Statement> newStatements) {
+		if (!newStatements.isEmpty()) {
+			add(emptyLine());
+		}
+		add(newStatements);
 	}
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
