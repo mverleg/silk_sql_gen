@@ -15,6 +15,7 @@ import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.sql_gen.sqlparts.StatementCollector;
 import nl.markv.silk.sql_gen.syntax.MetaInfo;
+import nl.markv.silk.sql_gen.syntax.PostgresSyntax;
 import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
 import nl.markv.silk.types.CheckConstraint;
@@ -38,7 +39,7 @@ public class Generator {
 //
 	public enum Dialect {
 		Sqlite(SqliteSyntax::new),
-//		Postgres(PostgresSyntax::new),
+		Postgres(PostgresSyntax::new),
 //		H2(H2Syntax::new),
 //		DB2(DB2Syntax::new)
 		;
@@ -73,11 +74,12 @@ public class Generator {
 			statements.add(gen.changeColumnForExistingTableSyntax()
 					.map(columnSyn -> generateChangeColumn(columnSyn, table, columnsInfo))
 					.orElse(Collections.emptyList()));
-		});
-		schema.tables().forEach(table -> {
 			statements.addAfterLine(gen.addPrimaryKeyToExistingTableSyntax()
 					.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
 					.orElse(Collections.emptyList()));
+		});
+		//TODO: in the future, insert data here
+		schema.tables().forEach(table -> {
 			statements.addAfterLine(gen.addCheckToExistingTableSyntax()
 					.map(checkSyn -> generateChecks(checkSyn, table))
 					.orElse(Collections.emptyList()));

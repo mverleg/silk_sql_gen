@@ -1,6 +1,5 @@
 package nl.markv.silk.sql_gen.syntax;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -9,7 +8,6 @@ import javax.annotation.Nonnull;
 import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.types.CheckConstraint;
-import nl.markv.silk.types.Column;
 import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.UniqueConstraint;
 
@@ -18,29 +16,34 @@ import static nl.markv.silk.sql_gen.sqlparts.ListEntry.listEntry;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
 
 /**
- * Attempt at a common version of SQL syntax, that creates as much as possible within the create table statement.
+ * Attempt at a common version of SQL syntax, that attempts to add constraints at the end.
  */
-public abstract class GenericInlineSyntax extends GenericSyntax {
+public abstract class GenericAlterSyntax extends GenericSyntax {
 
-	public GenericInlineSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull SyntaxOptions options) {
+	public GenericAlterSyntax(@Nonnull String schemaName, @Nonnull String silkVersion, @Nonnull SyntaxOptions options) {
 		super(schemaName, silkVersion, options);
 	}
 
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<CheckConstraint, ListEntry>> checkInCreateTableSyntax() {
-		return Optional.of((table, check) -> singletonList(listEntry(
-				"check(",
-				check.condition,
-				")"
-		)));
+		// Checks are added after table creation.
+		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<CheckConstraint, Statement>> addCheckToExistingTableSyntax() {
-		// Check is added when creating table by default.
-		return Optional.empty();
+		return Optional.of((table, check) -> singletonList(statement(
+//				"alter table ",
+//				quoted(table.name),
+//				" add constraint ",
+//				quoted(check.name == null ? nameFromHash("c_" + table.name, check.condition) : check.name),
+//
+//						"check (",
+//				String.join(", ", unique.columnsNames),
+				")"
+		)));
 	}
 
 	@Nonnull

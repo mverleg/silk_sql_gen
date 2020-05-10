@@ -1,6 +1,11 @@
 package nl.markv.silk.sql_gen.syntax;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -83,7 +88,23 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Nonnull
-	protected String nameFromCols(@Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
+	@Override
+	public Optional<TableEntrySyntax<List<Column>, ListEntry>> primaryKeyInCreateTableSyntax() {
+		// Primary key is specified inline by default.
+		//TODO: perhaps this will need to change when composite primary keys are supported
+		return Optional.empty();
+	}
+
+	@Nonnull
+	@Override
+	public Optional<TableEntrySyntax<List<Column>, Statement>> addPrimaryKeyToExistingTableSyntax() {
+		// Primary key is specified inline by default.
+		//TODO: perhaps this will need to change when composite primary keys are supported
+		return Optional.empty();
+	}
+
+	@Nonnull
+	protected static String nameFromCols(@Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
 		StringBuilder sql = new StringBuilder();
 		if (prefix != null) {
 			sql.append(prefix);
@@ -101,6 +122,22 @@ public abstract class GenericSyntax implements Syntax {
 			sql.append(col);
 		}
 		return sql.toString();
+	}
+
+	@Nonnull
+	protected static String nameFromHash(@Nonnull String prefix, @Nonnull String hashInput) {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException ex) {
+			throw new IllegalStateException(ex);
+		}
+		byte[] bytes = digest.digest(hashInput.getBytes(StandardCharsets.UTF_8));
+		String hash = new String(Base64.getEncoder().encode(bytes))
+				.replace("+", "")
+				.replace("/", "")
+				.replace("=", "");
+		return prefix + hash.substring(0, 16);
 	}
 
 	@Nonnull
