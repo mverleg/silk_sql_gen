@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
 
@@ -29,7 +28,6 @@ import nl.markv.silk.types.UniqueConstraint;
 import static nl.markv.silk.sql_gen.sqlparts.ListEntry.entriesText;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
-import static nl.markv.silk.sql_gen.sqlparts.StringEmptyLine.emptyLine;
 
 /**
  * Orchestrates the SQL generation, by calling syntax methods to match the Silk schema.
@@ -66,7 +64,7 @@ public class Generator {
 
 		DatabaseSpecific dbDbSpecific = Optional.of(schema.db)
 				.map(db -> db.databaseSpecific).orElse(null);
-		statements.add(emptyLine());
+		statements.singleEmptyLine();
 		statements.add(gen.prelude(dbDbSpecific));
 
 		schema.tables().forEach(table -> {
@@ -74,34 +72,34 @@ public class Generator {
 			statements.add(gen.changeColumnForExistingTableSyntax()
 					.map(columnSyn -> generateChangeColumn(columnSyn, table, columnsInfo))
 					.orElse(Collections.emptyList()));
-			statements.addAfterLine(gen.addPrimaryKeyToExistingTableSyntax()
+			statements.add(gen.addPrimaryKeyToExistingTableSyntax()
 					.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
 					.orElse(Collections.emptyList()));
 		});
 		//TODO: in the future, insert data here
 		schema.tables().forEach(table -> {
-			statements.addAfterLine(gen.addCheckToExistingTableSyntax()
+			statements.singleEmptyLine();
+			statements.add(gen.addCheckToExistingTableSyntax()
 					.map(checkSyn -> generateChecks(checkSyn, table))
 					.orElse(Collections.emptyList()));
-			statements.addAfterLine(gen.addUniqueToExistingTableSyntax()
+			statements.add(gen.addUniqueToExistingTableSyntax()
 					.map(uniqueSyn -> generateUnique(uniqueSyn, table))
 					.orElse(Collections.emptyList()));
-			statements.addAfterLine(gen.addReferenceToExistingTableSyntax()
+			statements.add(gen.addReferenceToExistingTableSyntax()
 					.map(referenceSyn -> generateReference(referenceSyn, table))
 					.orElse(Collections.emptyList()));
 		});
 
-		statements.add(emptyLine());
+		statements.singleEmptyLine();
 		statements.add(gen.postlude(dbDbSpecific));
-		statements.add(emptyLine());
+		statements.singleEmptyLine();
 
 		statements.statementsText(sql);
 	}
 
 	@Nonnull
 	private static List<Syntax.ColumnInfo> generateCreateTable(@Nonnull StatementCollector statements, @Nonnull SilkSchema schema, @Nonnull Syntax gen, @Nonnull Table table) {
-		statements.add(emptyLine());
-
+		statements.singleEmptyLine();
 		statements.add(generateTableDescriptionComment(table));
 		Pair<List<ListEntry>, List<Syntax.ColumnInfo>> res = generateColumns(gen, table);
 		List<ListEntry> entries = res.getLeft();

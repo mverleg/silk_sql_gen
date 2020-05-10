@@ -35,13 +35,12 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 	@Override
 	public Optional<TableEntrySyntax<CheckConstraint, Statement>> addCheckToExistingTableSyntax() {
 		return Optional.of((table, check) -> singletonList(statement(
-//				"alter table ",
-//				quoted(table.name),
-//				" add constraint ",
-//				quoted(check.name == null ? nameFromHash("c_" + table.name, check.condition) : check.name),
-//
-//						"check (",
-//				String.join(", ", unique.columnsNames),
+				"alter table ",
+				quoted(table.name),
+				" add constraint ",
+				quoted(check.name == null ? nameFromHash("c_" + table.name, check.condition) : check.name),
+				"check (",
+				check.condition,
 				")"
 		)));
 	}
@@ -63,7 +62,7 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 		// but this hook is used to add an index on unique columns that don't have one.
 		return Optional.of((table, unique) -> singletonList(statement(
 			"create unique index if not exists ",
-			nameFromCols("i", unique.table.name, unique.columnsNames),
+			quoted(nameFromCols("i", unique.table.name, unique.columnsNames)),
 			" on ",
 			quoted(table.name),
 			" (",

@@ -60,7 +60,7 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 		// but this hook is used to add an index on unique columns that don't have one.
 		return Optional.of((table, unique) -> singletonList(statement(
 			"create unique index if not exists ",
-			nameFromCols("i", unique.table.name, unique.columnsNames),
+			quoted(nameFromCols("i", unique.table.name, unique.columnsNames)),
 			" on ",
 			quoted(table.name),
 			" (",
@@ -90,6 +90,7 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 	@Nonnull
 	@Override
 	public Optional<TableEntrySyntax<ForeignKey, Statement>> addReferenceToExistingTableSyntax() {
+		//TODO @mark: create an index
 		return Optional.empty();
 	}
 

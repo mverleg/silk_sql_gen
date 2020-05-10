@@ -28,21 +28,29 @@ public class StatementCollector {
 		statements.addAll(newStatements);
 	}
 
-	public void addAfterLine(@Nonnull Collection<Statement> newStatements) {
-		if (!newStatements.isEmpty()) {
-			add(emptyLine());
-		}
-		add(newStatements);
-	}
-
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 	public void add(@Nonnull Optional<Statement> statement) {
-		statement.ifPresent(s -> statements.add(s));
+		statement.ifPresent(s -> add(s));
 	}
 
 	public void statementsText(@Nonnull StringBuilder sql) {
 		for (Statement statement : statements) {
 			statement.statementText(sql);
+		}
+	}
+
+	/**
+	 * Add a single empty line, meaning that if this method is called twice without other
+	 * statements being added, then second and subsequent times are ignored.
+	 */
+	public void singleEmptyLine() {
+		if (statements.isEmpty()) {
+			add(emptyLine());
+			return;
+		}
+		boolean lastWasEmptyLine = statements.get(statements.size() - 1) instanceof StringEmptyLine;
+		if (!lastWasEmptyLine) {
+			add(emptyLine());
 		}
 	}
 }
