@@ -51,19 +51,14 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Override
 	@Nonnull
-	public List<String> startTable(@Nonnull Table table) {
-		ArrayList<String> list = new ArrayList<>();
-		if (table.description != null) {
-			list.add("-- " + table.description);
-		}
-		list.add("create table '" + table.name + "' {");
-		return list;
+	public String startTable(@Nonnull Table table) {
+		return "create table '" + table.name + "' (";
 	}
 
 	@Override
 	@Nonnull
-	public List<String> endTable(@Nonnull Table table) {
-		return singletonList("};\n");
+	public String endTable(@Nonnull Table table) {
+		return ");";
 	}
 
 	@Nonnull

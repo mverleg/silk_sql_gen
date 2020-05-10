@@ -45,10 +45,10 @@ public interface Syntax {
 	List<Statement> postlude(@Nullable DatabaseSpecific db);
 
 	@Nonnull
-	List<String> startTable(@Nonnull Table table);
+	String startTable(@Nonnull Table table);
 
 	@Nonnull
-	List<String> endTable(@Nonnull Table table);
+	String endTable(@Nonnull Table table);
 
 	@Nonnull
 	TableEntrySyntax<ColumnInfo, ListEntry> columnInCreateTableSyntax();
