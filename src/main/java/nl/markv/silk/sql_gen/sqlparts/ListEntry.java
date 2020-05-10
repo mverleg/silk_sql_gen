@@ -31,13 +31,16 @@ public interface ListEntry {
 		return new StringListEntry(messageParts);
 	}
 
-	static void entriesText(@Nonnull StringBuilder sql, @Nonnull List<ListEntry> entries) {
+	@Nonnull
+	static String entriesText(@Nonnull List<ListEntry> entries) {
 		if (entries.isEmpty()) {
-			return;
+			return "";
 		}
+		StringBuilder sql = new StringBuilder();
 		for (int i = 0; i < entries.size() - 1; i++) {
 			entries.get(i).entryText(sql, false);
 		}
 		entries.get(entries.size() - 1).entryText(sql, true);
+		return sql.toString();
 	}
 }

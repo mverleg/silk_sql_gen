@@ -58,7 +58,7 @@ public abstract class GenericSyntax implements Syntax {
 	@Override
 	@Nonnull
 	public String endTable(@Nonnull Table table) {
-		return ");";
+		return ")";
 	}
 
 	@Nonnull

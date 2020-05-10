@@ -27,6 +27,7 @@ import nl.markv.silk.types.UniqueConstraint;
 
 import static nl.markv.silk.sql_gen.sqlparts.ListEntry.entriesText;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
+import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
 import static nl.markv.silk.sql_gen.sqlparts.StringEmptyLine.emptyLine;
 
 /**
@@ -98,8 +99,6 @@ public class Generator {
 		statements.add(emptyLine());
 
 		statements.add(generateTableDescriptionComment(table));
-		StringBuilder createTable = new StringBuilder();
-		createTable.append(gen.startTable(table));
 		Pair<List<ListEntry>, List<Syntax.ColumnInfo>> res = generateColumns(gen, table);
 		List<ListEntry> entries = res.getLeft();
 		entries.addAll(gen.primaryKeyInCreateTableSyntax()
@@ -114,9 +113,11 @@ public class Generator {
 		entries.addAll(gen.referenceInCreateTableSyntax()
 				.map(referenceSyn -> generateReference(referenceSyn, table))
 				.orElse(Collections.emptyList()));
-		entriesText(createTable, entries);
-		createTable.append(gen.endTable(table));
-		statements.add(statement(createTable));
+		statements.add(statement(
+				gen.startTable(table),
+				entriesText(entries),
+				gen.endTable(table)
+		));
 		return res.getRight();
 	}
 
@@ -124,17 +125,20 @@ public class Generator {
 	private static Optional<Statement> generateTableDescriptionComment(@Nonnull Table table) {
 		if (StringUtils.isNotEmpty(table.description)) {
 			//TODO @mark: handle multiline descriptions
-			comment(table.description);
+			return Optional.of(comment(table.description));
 		}
+		return Optional.empty();
 	}
 
 	@Nonnull
 	private static List<Statement> generateChangeColumn(@Nonnull Syntax.TableEntrySyntax<Syntax.ColumnInfo, Statement> columnSyn, @Nonnull Table table, @Nonnull List<Syntax.ColumnInfo> columnInfos) {
-		columnSyn.begin(table);
+		ArrayList<Statement> list = new ArrayList<>();
+		list.addAll(columnSyn.begin(table));
 		for (Syntax.ColumnInfo info : columnInfos) {
-			columnSyn.entry(table, info);
+			list.addAll(columnSyn.entry(table, info));
 		}
-		columnSyn.end(table);
+		list.addAll(columnSyn.end(table));
+		return list;
 	}
 
 	@Nonnull
@@ -150,53 +154,58 @@ public class Generator {
 
 	@Nonnull
 	private static <U> List<U> generateUnique(@Nonnull Syntax.TableEntrySyntax<UniqueConstraint, U> uniqueSyn, @Nonnull Table table) {
-		uniqueSyn.begin(sql, table);
+		ArrayList<U> list = new ArrayList<>();
+		list.addAll(uniqueSyn.begin(table));
 		for (UniqueConstraint unique : table.uniqueConstraints) {
-			uniqueSyn.entry(sql, table, unique);
+			list.addAll(uniqueSyn.entry(table, unique));
 		}
-		uniqueSyn.end(sql, table);
+		list.addAll(uniqueSyn.end(table));
+		return list;
 	}
 
 	@Nonnull
 	private static <U> List<U> generateChecks(@Nonnull Syntax.TableEntrySyntax<CheckConstraint, U> checkSyn, @Nonnull Table table) {
-		checkSyn.begin(sql, table);
+		ArrayList<U> list = new ArrayList<>();
+		list.addAll(checkSyn.begin(table));
 		for (CheckConstraint check : table.checkConstraints) {
-			checkSyn.entry(sql, table, check);
+			list.addAll(checkSyn.entry(table, check));
 		}
-		checkSyn.end(sql, table);
+		list.addAll(checkSyn.end(table));
+		return list;
 	}
 
 	@Nonnull
 	private static <U> List<U> generatePrimaryKey(@Nonnull Syntax.TableEntrySyntax<List<Column>, U> primaryKeySyn, @Nonnull Table table) {
-		primaryKeySyn.begin(sql, table);
-		primaryKeySyn.entry(sql, table, table.primaryKey);
-		primaryKeySyn.end(sql, table);
+		ArrayList<U> list = new ArrayList<>();
+		list.addAll(primaryKeySyn.begin(table));
+		list.addAll(primaryKeySyn.entry(table, table.primaryKey));
+		list.addAll(primaryKeySyn.end(table));
+		return list;
 	}
 
 	@Nonnull
 	private static Pair<List<ListEntry>, List<Syntax.ColumnInfo>> generateColumns(@Nonnull Syntax gen, @Nonnull Table table) {
 		List<ListEntry> entries = new ArrayList<>();
-		Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnGen = gen.columnInCreateTableSyntax();
-		columnGen.begin(sql, table);
+		Syntax.TableEntrySyntax<Syntax.ColumnInfo, ListEntry> columnGen = gen.columnInCreateTableSyntax();
+		columnGen.begin(table);
 		List<Syntax.ColumnInfo> columnInfos = new ArrayList<>();
 		for (int colNr = 0; colNr < table.columns.size(); colNr++) {
-			Syntax.ColumnInfo info = new Syntax.ColumnInfo();
-			info.column = table.columns.get(colNr);
-			String autoValue = null;
-			info.dataTypeName = gen.dataTypeName(sql, info.column.type);
-			if (info.column.autoValue != null) {
-				info.autoValueName = gen.autoValueName(sql, info.column.autoValue);
-			}
-			info.isLast = colNr == table.columns.size() - 1;
-			info.primaryKey = MetaInfo.PrimaryKey.NotPart;
-			if (table.primaryKeyNames.contains(info.column.name)) {
-				info.primaryKey = table.primaryKey.size() == 1 ?
+			Column column = table.columns.get(colNr);
+			MetaInfo.PrimaryKey primaryKey = MetaInfo.PrimaryKey.NotPart;
+			if (table.primaryKeyNames.contains(column.name)) {
+				primaryKey = table.primaryKey.size() == 1 ?
 						MetaInfo.PrimaryKey.Single : MetaInfo.PrimaryKey.Composite;
 			}
+			Syntax.ColumnInfo info = new Syntax.ColumnInfo(
+					column,
+					gen.dataTypeName(column.type),
+					column.autoValue == null ? null : gen.autoValueName(column.autoValue),
+					primaryKey
+			);
 			columnInfos.add(info);
-			columnGen.entry(sql, table, info);
+			columnGen.entry(table, info);
 		}
-		columnGen.end(sql, table);
-		return columnInfos;
+		columnGen.end(table);
+		return Pair.of(entries, columnInfos);
 	}
 }
