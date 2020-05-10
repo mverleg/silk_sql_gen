@@ -1,5 +1,7 @@
 package nl.markv.silk.sql_gen.sqlparts;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 public interface ListEntry {
@@ -27,5 +29,15 @@ public interface ListEntry {
 		assert !messageParts[last].endsWith(","): "trailing comma is added automatically";
 		assert !messageParts[last].endsWith("\n"): "trailing newline is added automatically";
 		return new StringListEntry(messageParts);
+	}
+
+	static void entriesText(@Nonnull StringBuilder sql, @Nonnull List<ListEntry> entries) {
+		if (entries.isEmpty()) {
+			return;
+		}
+		for (int i = 0; i < entries.size() - 1; i++) {
+			entries.get(i).entryText(sql, false);
+		}
+		entries.get(entries.size() - 1).entryText(sql, true);
 	}
 }

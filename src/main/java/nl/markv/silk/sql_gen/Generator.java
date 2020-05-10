@@ -1,6 +1,7 @@
 package nl.markv.silk.sql_gen;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -8,7 +9,9 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
+import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.sql_gen.sqlparts.StatementCollector;
 import nl.markv.silk.sql_gen.syntax.MetaInfo;
@@ -22,13 +25,14 @@ import nl.markv.silk.types.SilkSchema;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
+import static nl.markv.silk.sql_gen.sqlparts.ListEntry.entriesText;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
-import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
 import static nl.markv.silk.sql_gen.sqlparts.StringEmptyLine.emptyLine;
 
 /**
  * Orchestrates the SQL generation, by calling syntax methods to match the Silk schema.
  */
+@SuppressWarnings("CollectionAddAllCanBeReplacedWithConstructor")
 public class Generator {
 //
 	public enum Dialect {
@@ -62,16 +66,25 @@ public class Generator {
 		statements.add(emptyLine());
 		statements.add(gen.prelude(dbDbSpecific));
 
-		schema.tables().forEach(table -> generateCreateTable(statements, schema, gen, table));
 		schema.tables().forEach(table -> {
-			gen.addPrimaryKeyToExistingTableSyntax().ifPresent(primaryKeySyn ->
-					generatePrimaryKey(primaryKeySyn, table));
-			gen.addCheckToExistingTableSyntax().ifPresent(checkSyn ->
-					generateChecks(checkSyn, table));
-			gen.addUniqueToExistingTableSyntax().ifPresent(uniqueSyn ->
-					generateUnique(uniqueSyn, table));
-			gen.addReferenceToExistingTableSyntax().ifPresent(referenceSyn ->
-					generateReference(referenceSyn, table));
+			List<Syntax.ColumnInfo> columnsInfo = generateCreateTable(statements, schema, gen, table);
+			statements.add(gen.changeColumnForExistingTableSyntax()
+					.map(columnSyn -> generateChangeColumn(columnSyn, table, columnsInfo))
+					.orElse(Collections.emptyList()));
+		});
+		schema.tables().forEach(table -> {
+			statements.add(gen.addPrimaryKeyToExistingTableSyntax()
+					.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
+					.orElse(Collections.emptyList()));
+			statements.add(gen.addCheckToExistingTableSyntax()
+					.map(checkSyn -> generateChecks(checkSyn, table))
+					.orElse(Collections.emptyList()));
+			statements.add(gen.addUniqueToExistingTableSyntax()
+					.map(uniqueSyn -> generateUnique(uniqueSyn, table))
+					.orElse(Collections.emptyList()));
+			statements.add(gen.addReferenceToExistingTableSyntax()
+					.map(referenceSyn -> generateReference(referenceSyn, table))
+					.orElse(Collections.emptyList()));
 		});
 
 		statements.add(gen.postlude(dbDbSpecific));
@@ -80,25 +93,31 @@ public class Generator {
 		statements.statementsText(sql);
 	}
 
-	private static void generateCreateTable(@Nonnull StatementCollector statements, @Nonnull SilkSchema schema, @Nonnull Syntax gen, @Nonnull Table table) {
+	@Nonnull
+	private static List<Syntax.ColumnInfo> generateCreateTable(@Nonnull StatementCollector statements, @Nonnull SilkSchema schema, @Nonnull Syntax gen, @Nonnull Table table) {
 		statements.add(emptyLine());
 
 		statements.add(generateTableDescriptionComment(table));
 		StringBuilder createTable = new StringBuilder();
 		createTable.append(gen.startTable(table));
-		List<Syntax.ColumnInfo> columnInfos = generateColumns(gen, table);
-		gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn ->
-				generatePrimaryKey(primaryKeySyn, table));
-		gen.checkInCreateTableSyntax().ifPresent(checkSyn ->
-				generateChecks(checkSyn, table));
-		gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn ->
-				generateUnique(uniqueSyn, table));
-		gen.referenceInCreateTableSyntax().ifPresent(referenceSyn ->
-				generateReference(referenceSyn, table));
+		Pair<List<ListEntry>, List<Syntax.ColumnInfo>> res = generateColumns(gen, table);
+		List<ListEntry> entries = res.getLeft();
+		entries.addAll(gen.primaryKeyInCreateTableSyntax()
+				.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
+				.orElse(Collections.emptyList()));
+		entries.addAll(gen.checkInCreateTableSyntax()
+				.map(checkSyn -> generateChecks(checkSyn, table))
+				.orElse(Collections.emptyList()));
+		entries.addAll(gen.uniqueInCreateTableSyntax()
+				.map(uniqueSyn -> generateUnique(uniqueSyn, table))
+				.orElse(Collections.emptyList()));
+		entries.addAll(gen.referenceInCreateTableSyntax()
+				.map(referenceSyn -> generateReference(referenceSyn, table))
+				.orElse(Collections.emptyList()));
+		entriesText(createTable, entries);
 		createTable.append(gen.endTable(table));
 		statements.add(statement(createTable));
-		statements.add(gen.changeColumnForExistingTableSyntax()
-				.map(columnSyn -> generateChangeColumn(columnSyn, table, columnInfos)));
+		return res.getRight();
 	}
 
 	@Nonnull
@@ -110,7 +129,7 @@ public class Generator {
 	}
 
 	@Nonnull
-	private static List<Statement> generateChangeColumn(@Nonnull int columnSyn, Table table, List<Syntax.ColumnInfo> columnInfos) {
+	private static List<Statement> generateChangeColumn(@Nonnull Syntax.TableEntrySyntax<Syntax.ColumnInfo, Statement> columnSyn, @Nonnull Table table, @Nonnull List<Syntax.ColumnInfo> columnInfos) {
 		columnSyn.begin(table);
 		for (Syntax.ColumnInfo info : columnInfos) {
 			columnSyn.entry(table, info);
@@ -118,17 +137,19 @@ public class Generator {
 		columnSyn.end(table);
 	}
 
-	private static List<Statement> generateReference(@Nonnull Syntax.TableEntrySyntax<ForeignKey, Statement> referenceSyn, Table table) {
-		ArrayList<Statement> statements = new ArrayList<>();
-		statements.addAll(referenceSyn.begin(table));
+	@Nonnull
+	private static <U> List<U> generateReference(@Nonnull Syntax.TableEntrySyntax<ForeignKey, U> referenceSyn, @Nonnull Table table) {
+		ArrayList<U> list = new ArrayList<>();
+		list.addAll(referenceSyn.begin(table));
 		for (ForeignKey reference : table.references) {
-			statements.addAll(referenceSyn.entry(table, reference));
+			list.addAll(referenceSyn.entry(table, reference));
 		}
-		statements.addAll(referenceSyn.end(table));
-		return statements;
+		list.addAll(referenceSyn.end(table));
+		return list;
 	}
 
-	private static void generateUnique(@Nonnull Syntax.TableEntrySyntax<UniqueConstraint, Statement> uniqueSyn, Table table) {
+	@Nonnull
+	private static <U> List<U> generateUnique(@Nonnull Syntax.TableEntrySyntax<UniqueConstraint, U> uniqueSyn, @Nonnull Table table) {
 		uniqueSyn.begin(sql, table);
 		for (UniqueConstraint unique : table.uniqueConstraints) {
 			uniqueSyn.entry(sql, table, unique);
@@ -136,7 +157,8 @@ public class Generator {
 		uniqueSyn.end(sql, table);
 	}
 
-	private static void generateChecks(@Nonnull Syntax.TableEntrySyntax<CheckConstraint, Statement> checkSyn, Table table) {
+	@Nonnull
+	private static <U> List<U> generateChecks(@Nonnull Syntax.TableEntrySyntax<CheckConstraint, U> checkSyn, @Nonnull Table table) {
 		checkSyn.begin(sql, table);
 		for (CheckConstraint check : table.checkConstraints) {
 			checkSyn.entry(sql, table, check);
@@ -144,14 +166,16 @@ public class Generator {
 		checkSyn.end(sql, table);
 	}
 
-	private static void generatePrimaryKey(@Nonnull Syntax.TableEntrySyntax<List<Column>, Statement> primaryKeySyn, Table table) {
+	@Nonnull
+	private static <U> List<U> generatePrimaryKey(@Nonnull Syntax.TableEntrySyntax<List<Column>, U> primaryKeySyn, @Nonnull Table table) {
 		primaryKeySyn.begin(sql, table);
 		primaryKeySyn.entry(sql, table, table.primaryKey);
 		primaryKeySyn.end(sql, table);
 	}
 
 	@Nonnull
-	private static List<Syntax.ColumnInfo> generateColumns(@Nonnull Syntax gen, @Nonnull Table table) {
+	private static Pair<List<ListEntry>, List<Syntax.ColumnInfo>> generateColumns(@Nonnull Syntax gen, @Nonnull Table table) {
+		List<ListEntry> entries = new ArrayList<>();
 		Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnGen = gen.columnInCreateTableSyntax();
 		columnGen.begin(sql, table);
 		List<Syntax.ColumnInfo> columnInfos = new ArrayList<>();
