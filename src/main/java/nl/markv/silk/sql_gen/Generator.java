@@ -7,8 +7,6 @@ import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang3.tuple.Triple;
-
 import nl.markv.silk.sql_gen.syntax.MetaInfo;
 import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
@@ -54,62 +52,88 @@ public class Generator {
 				.map(db -> db.databaseSpecific).orElse(null);
 		gen.prelude(sql, dbDbSpecific);
 
-		generateCreateTable(sql, schema, gen);
-
-		generateConstraints(sql, schema, gen);
-
-		generateReferences(sql, schema, gen);
+		schema.tables().forEach(table -> generateCreateTable(sql, schema, gen, table));
+		schema.tables().forEach(table -> {
+			gen.addPrimaryKeyToExistingTableSyntax().ifPresent(primaryKeySyn ->
+					generatePrimaryKey(sql, primaryKeySyn, table));
+			gen.addCheckToExistingTableSyntax().ifPresent(checkSyn ->
+					generateChecks(sql, checkSyn, table));
+			gen.addUniqueToExistingTableSyntax().ifPresent(uniqueSyn ->
+					generateUnique(sql, uniqueSyn, table));
+			gen.addReferenceToExistingTableSyntax().ifPresent(referenceSyn ->
+					generateReference(sql, referenceSyn, table));
+		});
 
 		gen.postlude(sql, dbDbSpecific);
 	}
 
-	private static void generateCreateTable(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, @Nonnull Syntax gen) {
-		for (Table table : schema.tables()) {
-			sql.newline();
-			gen.startTable(sql, table);
-			generateColumns(sql, gen, table);
-			gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn -> {
-				primaryKeySyn.begin(sql, table);
-				primaryKeySyn.entry(sql, table, table.primaryKey);
-				primaryKeySyn.end(sql, table);
-			});
-			gen.checkInCreateTableSyntax().ifPresent(checkSyn -> {
-				checkSyn.begin(sql, table);
-				for (CheckConstraint check : table.checkConstraints) {
-					checkSyn.entry(sql, table, check);
-				}
-				checkSyn.end(sql, table);
-			});
-			gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn -> {
-				uniqueSyn.begin(sql, table);
-				for (UniqueConstraint unique : table.uniqueConstraints) {
-					uniqueSyn.entry(sql, table, unique);
-				}
-				uniqueSyn.end(sql, table);
-			});
-			gen.referenceInCreateTableSyntax().ifPresent(referenceSyn -> {
-				referenceSyn.begin(sql, table);
-				for (ForeignKey reference : table.references) {
-					referenceSyn.entry(sql, table, reference);
-				}
-				referenceSyn.end(sql, table);
-			});
-			gen.endTable(sql, table);
-			gen.changeColumnForExistingTableSyntax();
-		}
+	private static void generateCreateTable(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, @Nonnull Syntax gen, @Nonnull Table table) {
+		sql.newline();
+		gen.startTable(sql, table);
+		List<Syntax.ColumnInfo> columnInfos = generateColumns(sql, gen, table);
+		gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn ->
+				generatePrimaryKey(sql, primaryKeySyn, table));
+		gen.checkInCreateTableSyntax().ifPresent(checkSyn ->
+				generateChecks(sql, checkSyn, table));
+		gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn ->
+				generateUnique(sql, uniqueSyn, table));
+		gen.referenceInCreateTableSyntax().ifPresent(referenceSyn ->
+				generateReference(sql, referenceSyn, table));
+		gen.endTable(sql, table);
+		gen.changeColumnForExistingTableSyntax().ifPresent(columnSyn ->
+				generateChangeColumn(sql, columnSyn, table, columnInfos));
 	}
 
-	private static void generateColumns(@Nonnull SqlWriter sql, @Nonnull Syntax gen, @Nonnull Table table) {
+	private static void generateChangeColumn(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnSyn, Table table, List<Syntax.ColumnInfo> columnInfos) {
+		columnSyn.begin(sql, table);
+		for (Syntax.ColumnInfo info : columnInfos) {
+			columnSyn.entry(sql, table, info);
+		}
+		columnSyn.end(sql, table);
+	}
+
+	private static void generateReference(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<ForeignKey> referenceSyn, Table table) {
+		referenceSyn.begin(sql, table);
+		for (ForeignKey reference : table.references) {
+			referenceSyn.entry(sql, table, reference);
+		}
+		referenceSyn.end(sql, table);
+	}
+
+	private static void generateUnique(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<UniqueConstraint> uniqueSyn, Table table) {
+		uniqueSyn.begin(sql, table);
+		for (UniqueConstraint unique : table.uniqueConstraints) {
+			uniqueSyn.entry(sql, table, unique);
+		}
+		uniqueSyn.end(sql, table);
+	}
+
+	private static void generateChecks(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<CheckConstraint> checkSyn, Table table) {
+		checkSyn.begin(sql, table);
+		for (CheckConstraint check : table.checkConstraints) {
+			checkSyn.entry(sql, table, check);
+		}
+		checkSyn.end(sql, table);
+	}
+
+	private static void generatePrimaryKey(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<List<Column>> primaryKeySyn, Table table) {
+		primaryKeySyn.begin(sql, table);
+		primaryKeySyn.entry(sql, table, table.primaryKey);
+		primaryKeySyn.end(sql, table);
+	}
+
+	@Nonnull
+	private static List<Syntax.ColumnInfo> generateColumns(@Nonnull SqlWriter sql, @Nonnull Syntax gen, @Nonnull Table table) {
 		Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnGen = gen.columnInCreateTableSyntax();
 		columnGen.begin(sql, table);
+		List<Syntax.ColumnInfo> columnInfos = new ArrayList<>();
 		for (int colNr = 0; colNr < table.columns.size(); colNr++) {
 			Syntax.ColumnInfo info = new Syntax.ColumnInfo();
 			info.column = table.columns.get(colNr);
 			String autoValue = null;
 			info.dataTypeName = gen.dataTypeName(sql, info.column.type);
 			if (info.column.autoValue != null) {
-				autoValue = gen.autoValueName(sql, info.column.autoValue);
-				//autoColumns.add(Triple.of(info.column, dataType, autoValue));
+				info.autoValueName = gen.autoValueName(sql, info.column.autoValue);
 			}
 			info.isLast = colNr == table.columns.size() - 1;
 			info.primaryKey = MetaInfo.PrimaryKey.NotPart;
@@ -117,34 +141,10 @@ public class Generator {
 				info.primaryKey = table.primaryKey.size() == 1 ?
 						MetaInfo.PrimaryKey.Single : MetaInfo.PrimaryKey.Composite;
 			}
+			columnInfos.add(info);
 			columnGen.entry(sql, table, info);
 		}
 		columnGen.end(sql, table);
-	}
-
-	private static void generateConstraints(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, Syntax gen) {
-		for (Table table : schema.tables()) {
-			gen.startTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
-			for (UniqueConstraint unique : table.uniqueConstraints) {
-				gen.tableUniqueConstraintAfter(sql, table.group, table.name, unique.name, unique.columns, table.databaseSpecific);
-			}
-			gen.endTableUniqueConstraints(sql, table.group, table.name, table.databaseSpecific);
-
-			gen.startTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
-			for (CheckConstraint check : table.checkConstraints) {
-				gen.tableCheckConstraintAfter(sql, table.group, table.name, check.name, check.condition, table.databaseSpecific);
-			}
-			gen.endTableCheckConstraints(sql, table.group, table.name, table.databaseSpecific);
-		}
-	}
-
-	private static void generateReferences(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, Syntax gen) {
-		for (Table table : schema.tables()) {
-			gen.startTableReferences(sql, table.group, table.name, table.databaseSpecific);
-			for (ForeignKey ref : table.references) {
-				gen.tableReferenceAfter(sql, table.group, table.name, ref.name, ref.targetTable, ref.columns, table.databaseSpecific);
-			}
-			gen.endTableReferences(sql, table.group, table.name, table.databaseSpecific);
-		}
+		return columnInfos;
 	}
 }

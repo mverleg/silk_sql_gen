@@ -10,6 +10,7 @@ import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
+import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
@@ -145,13 +146,13 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint>> referenceInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<ForeignKey>> referenceInCreateTableSyntax() {
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint>> addReferenceToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<ForeignKey>> addReferenceToExistingTableSyntax() {
 		return Optional.empty();
 	}
 
