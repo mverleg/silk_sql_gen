@@ -10,7 +10,6 @@ import javax.annotation.Nonnull;
 import nl.markv.silk.sql_gen.syntax.MetaInfo;
 import nl.markv.silk.sql_gen.syntax.SqliteSyntax;
 import nl.markv.silk.sql_gen.syntax.Syntax;
-import nl.markv.silk.sql_gen.writer.SqlWriter;
 import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
@@ -77,13 +76,13 @@ public class Generator {
 		sql.lineBlock(() -> {
 			columnInfos[0] = generateColumns(sql, gen, table);
 			gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn ->
-					generatePrimaryKey(sql, primaryKeySyn, table, ));
+					generatePrimaryKey(sql, primaryKeySyn, table));
 			gen.checkInCreateTableSyntax().ifPresent(checkSyn ->
-					generateChecks(sql, checkSyn, table, sql::line));
+					generateChecks(sql, checkSyn, table));
 			gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn ->
-					generateUnique(sql, uniqueSyn, table, sql::line));
+					generateUnique(sql, uniqueSyn, table));
 			gen.referenceInCreateTableSyntax().ifPresent(referenceSyn ->
-					generateReference(sql, referenceSyn, table, sql::line));
+					generateReference(sql, referenceSyn, table));
 			gen.endTable(sql, table);
 		});
 		gen.changeColumnForExistingTableSyntax().ifPresent(columnSyn ->

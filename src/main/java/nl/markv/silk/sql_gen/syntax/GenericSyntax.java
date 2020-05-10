@@ -1,11 +1,14 @@
 package nl.markv.silk.sql_gen.syntax;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import nl.markv.silk.sql_gen.sqlparts.ListEntry;
+import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
@@ -13,6 +16,8 @@ import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
+import static java.util.Collections.singletonList;
+import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
 import static org.apache.commons.lang3.Validate.isTrue;
 
 /**
@@ -31,38 +36,37 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void prelude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db) {
-		this.schemaName = schemaName;
-		this.silkVersion = silkVersion;
-		sql.newline();
-		sql.comment("start schema " + schemaName);
+	@Nonnull
+	public List<Statement> prelude(@Nullable DatabaseSpecific db) {
+		return singletonList(comment("start schema ", schemaName));
 	}
 
 	@Override
-	public void postlude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db) {
-		sql.newline();
-		sql.comment("end schema " + schemaName);
-		sql.newline();
+	@Nonnull
+	public List<Statement> postlude(@Nullable DatabaseSpecific db) {
+		return singletonList(comment("end schema ", schemaName));
 	}
 
 	@Override
-	public void startTable(@Nonnull SqlWriter sql, @Nonnull Table table) {
+	@Nonnull
+	public List<String> startTable(@Nonnull Table table) {
+		ArrayList<String> list = new ArrayList<>();
 		if (table.description != null) {
-			sql.comment(table.description);
+			list.add("-- " + table.description);
 		}
-		sql.add("create table ");
-		sql.add(table.name);
-		sql.add(" {");
+		list.add("create table '" + table.name + "' {");
+		return list;
 	}
 
 	@Override
-	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table) {
-		sql.add("}");
+	@Nonnull
+	public List<String> endTable(@Nonnull Table table) {
+		return singletonList("};\n");
 	}
 
 	@Nonnull
 	@Override
-	public TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax() {
+	public TableEntrySyntax<ColumnInfo, ListEntry> columnInCreateTableSyntax() {
 		return (sql, table, info) -> {
 			Column column = info.column;
 			sql.add("\t");
@@ -85,21 +89,21 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<List<Column>>> primaryKeyInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<List<Column>, ListEntry>> primaryKeyInCreateTableSyntax() {
 		// Primary key is specified inline by default.
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<List<Column>>> addPrimaryKeyToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<List<Column>, List<Statement>>> addPrimaryKeyToExistingTableSyntax() {
 		// Primary key is specified inline by default.
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<CheckConstraint>> checkInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<CheckConstraint, ListEntry>> checkInCreateTableSyntax() {
 		return Optional.of((sql, table, check) -> {
 			sql.add("\tcheck(");
 			sql.add(check.condition);
@@ -110,14 +114,14 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<CheckConstraint>> addCheckToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<CheckConstraint, List<Statement>>> addCheckToExistingTableSyntax() {
 		// Check is added when creating table by default.
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint>> uniqueInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax() {
 		return Optional.of((sql, table, unique) -> {
 			sql.add("\tunique(");
 			sql.delimitered(", ", unique.columnsNames);
@@ -127,7 +131,7 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<UniqueConstraint>> addUniqueToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<UniqueConstraint, List<Statement>>> addUniqueToExistingTableSyntax() {
 		// Unicity is added when creating table by default,
 		// but this hook is used to add an index on unique columns that don't have one.
 		return Optional.of((sql, table, unique) -> {
@@ -143,23 +147,23 @@ public abstract class GenericSyntax implements Syntax {
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<ForeignKey>> referenceInCreateTableSyntax() {
+	public Optional<TableEntrySyntax<ForeignKey, ListEntry>> referenceInCreateTableSyntax() {
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<ForeignKey>> addReferenceToExistingTableSyntax() {
+	public Optional<TableEntrySyntax<ForeignKey, List<Statement>>> addReferenceToExistingTableSyntax() {
 		return Optional.empty();
 	}
 
 	@Nonnull
 	@Override
-	public Optional<TableEntrySyntax<ColumnInfo>> changeColumnForExistingTableSyntax() {
+	public Optional<TableEntrySyntax<ColumnInfo, List<Statement>>> changeColumnForExistingTableSyntax() {
 		return Optional.empty();
 	}
 
-	protected void nameFromCols(@Nonnull SqlWriter sql, @Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
+	protected void nameFromCols(@Nullable String prefix, @Nonnull String table, @Nonnull List<String> columns) {
 		if (prefix != null) {
 			sql.add(prefix);
 			sql.add("_");
