@@ -35,12 +35,12 @@ public interface Syntax {
 
 	void postlude(@Nonnull SqlWriter sql, @Nullable DatabaseSpecific db);
 
-	void startTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
+	void startTable(@Nonnull SqlWriter sql, @Nonnull Table table);
 
-	void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db);
+	void endTable(@Nonnull SqlWriter sql, @Nonnull Table table);
 
-	final class ColumnInfo { Column column; String dataTypeName; String autoValueName; MetaInfo.PrimaryKey primaryKey; boolean isLast; }
-	@Nullable
+	final class ColumnInfo { public Column column; public String dataTypeName; public String autoValueName; public MetaInfo.PrimaryKey primaryKey; public boolean isLast; }
+	@Nonnull
 	TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax();
 
 	@Nullable
@@ -67,7 +67,7 @@ public interface Syntax {
 	@Nullable
 	TableEntrySyntax<UniqueConstraint> addReferenceToExistingTableSyntax();
 
-	final class AutoValueInfo { Column column; String dataTypeName; String autoValueName; }
+	final class AutoValueInfo { public Column column; public String dataTypeName; public String autoValueName; }
 	@Nullable
 	TableEntrySyntax<AutoValueInfo> addDefaultValueToExistingTableSyntax();
 }

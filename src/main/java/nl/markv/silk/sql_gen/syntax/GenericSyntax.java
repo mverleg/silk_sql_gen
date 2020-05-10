@@ -45,7 +45,7 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void startTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db) {
+	public void startTable(@Nonnull SqlWriter sql, @Nonnull Table table) {
 		if (table.description != null) {
 			sql.comment(table.description);
 		}
@@ -55,11 +55,11 @@ public abstract class GenericSyntax implements Syntax {
 	}
 
 	@Override
-	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table, @Nullable DatabaseSpecific db) {
+	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table) {
 		sql.addLine("}");
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
 	public TableEntrySyntax<ColumnInfo> columnInCreateTableSyntax() {
 		return (sql, table, info) -> {
