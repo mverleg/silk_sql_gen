@@ -19,6 +19,8 @@ import nl.markv.silk.types.SilkSchema;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
+import static org.apache.commons.lang3.Validate.notNull;
+
 /**
  * Orchestrates the SQL generation, by calling syntax methods to match the Silk schema.
  */
@@ -70,18 +72,22 @@ public class Generator {
 	private static void generateCreateTable(@Nonnull SqlWriter sql, @Nonnull SilkSchema schema, @Nonnull Syntax gen, @Nonnull Table table) {
 		sql.newline();
 		gen.startTable(sql, table);
-		List<Syntax.ColumnInfo> columnInfos = generateColumns(sql, gen, table);
-		gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn ->
-				generatePrimaryKey(sql, primaryKeySyn, table));
-		gen.checkInCreateTableSyntax().ifPresent(checkSyn ->
-				generateChecks(sql, checkSyn, table));
-		gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn ->
-				generateUnique(sql, uniqueSyn, table));
-		gen.referenceInCreateTableSyntax().ifPresent(referenceSyn ->
-				generateReference(sql, referenceSyn, table));
-		gen.endTable(sql, table);
+		@SuppressWarnings("unchecked")
+		List<Syntax.ColumnInfo>[] columnInfos = new ArrayList[]{null};
+		sql.lineBlock(() -> {
+			columnInfos[0] = generateColumns(sql, gen, table);
+			gen.primaryKeyInCreateTableSyntax().ifPresent(primaryKeySyn ->
+					generatePrimaryKey(sql, primaryKeySyn, table, ));
+			gen.checkInCreateTableSyntax().ifPresent(checkSyn ->
+					generateChecks(sql, checkSyn, table, sql::line));
+			gen.uniqueInCreateTableSyntax().ifPresent(uniqueSyn ->
+					generateUnique(sql, uniqueSyn, table, sql::line));
+			gen.referenceInCreateTableSyntax().ifPresent(referenceSyn ->
+					generateReference(sql, referenceSyn, table, sql::line));
+			gen.endTable(sql, table);
+		});
 		gen.changeColumnForExistingTableSyntax().ifPresent(columnSyn ->
-				generateChangeColumn(sql, columnSyn, table, columnInfos));
+				generateChangeColumn(sql, columnSyn, table, notNull(columnInfos[0])));
 	}
 
 	private static void generateChangeColumn(@Nonnull SqlWriter sql, @Nonnull Syntax.TableEntrySyntax<Syntax.ColumnInfo> columnSyn, Table table, List<Syntax.ColumnInfo> columnInfos) {

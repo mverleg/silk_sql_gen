@@ -53,12 +53,12 @@ public abstract class GenericSyntax implements Syntax {
 		}
 		sql.add("create table ");
 		sql.add(table.name);
-		sql.addLine(" {");
+		sql.add(" {");
 	}
 
 	@Override
 	public void endTable(@Nonnull SqlWriter sql, @Nonnull Table table) {
-		sql.addLine("}");
+		sql.add("}");
 	}
 
 	@Nonnull
@@ -81,8 +81,6 @@ public abstract class GenericSyntax implements Syntax {
 				sql.add(" default ");
 				sql.add(column.defaultValue);
 			}
-//			sql.add(",");
-//			sql.newline();
 		};
 	}
 
@@ -140,7 +138,7 @@ public abstract class GenericSyntax implements Syntax {
 			sql.add(unique.table.name);
 			sql.add(" (");
 			sql.delimitered(", ", unique.columnsNames);
-			sql.addLine(")");
+			sql.add(")");
 		});
 	}
 
