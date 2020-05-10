@@ -18,6 +18,12 @@ public class PostgresSyntax extends GenericAlterSyntax {
 
 	@Nonnull
 	@Override
+	protected String dialectName() {
+		return "postgres12";
+	}
+
+	@Nonnull
+	@Override
 	public String autoValueName(@Nonnull Column.AutoOptions autoValue) {
 		switch (autoValue) {
 			case INCREMENT:

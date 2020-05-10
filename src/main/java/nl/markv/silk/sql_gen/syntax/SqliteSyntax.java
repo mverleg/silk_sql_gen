@@ -15,6 +15,12 @@ public class SqliteSyntax extends GenericInlineSyntax {
 
 	@Nonnull
 	@Override
+	protected String dialectName() {
+		return "sqlite3";
+	}
+
+	@Nonnull
+	@Override
 	public String autoValueName(@Nonnull Column.AutoOptions autoValue) {
 		switch (autoValue) {
 			case INCREMENT:

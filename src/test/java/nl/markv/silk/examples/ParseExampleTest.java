@@ -1,19 +1,37 @@
 package nl.markv.silk.examples;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
+import javax.annotation.Nonnull;
 
-import nl.markv.silk.SilkVersion;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static nl.markv.silk.generate.Generate.generateSilkObjects;
+import nl.markv.silk.example.Examples;
+import nl.markv.silk.sql_gen.Generator;
+import nl.markv.silk.sql_gen.syntax.Syntax;
+import nl.markv.silk.types.SilkSchema;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class ParseExampleTest {
 
-	@Test
-	public void generateExamples() throws IOException {
+	@Nonnull
+	static Stream<Pair<Generator.Dialect, SilkSchema>> dialectExampleProvider() {
+		return new Examples().jsons().stream()
+				.flatMap(schema -> Arrays.stream(Generator.Dialect.values())
+						.map(dialect -> Pair.of(dialect, schema)));
+	}
 
+	@ParameterizedTest
+	@MethodSource({"dialectExampleProvider"})
+	void testLoadExample(@Nonnull Pair<Generator.Dialect, SilkSchema> dialectSchemaPair) {
+		StringBuilder sql = new StringBuilder();
+		Generator.generate(sql, dialectSchemaPair.getRight(), dialectSchemaPair.getLeft(), new Syntax.SyntaxOptions(true));
+		String txt = sql.toString();
+		System.out.println(txt);
+		assertFalse(txt.isEmpty());
 	}
 }
