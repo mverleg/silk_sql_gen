@@ -17,6 +17,7 @@ import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.ForeignKey;
+import nl.markv.silk.types.Row;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
@@ -38,6 +39,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 public abstract class GenericSyntax implements Syntax {
 
 	protected final boolean quoteNames;
+	protected final boolean terse;
 	protected String schemaName;
 	protected String silkVersion;
 
@@ -45,6 +47,7 @@ public abstract class GenericSyntax implements Syntax {
 		this.schemaName = schemaName;
 		this.silkVersion = silkVersion;
 		this.quoteNames = options.quoteNames;
+		this.terse = options.terse;
 	}
 
 	@Override
@@ -184,6 +187,63 @@ public abstract class GenericSyntax implements Syntax {
 				String.join(", ", fk.targetColumns(c1 -> quoted(c1.name))),
 				")"
 		)));
+	}
+
+	public class GenericInsertSyntax implements Syntax.InsertSyntax {
+
+		@Override
+		public int rowsPerStatement() {
+			return 100;
+		}
+
+		@Nonnull
+		@Override
+		public String insertBegin(@Nonnull Table table) {
+			StringBuilder sql = new StringBuilder();
+			if (!terse && table.data.nonDataColumns().findAny().isPresent()) {
+				sql.append("-- columns filled from default values: ");
+				sql.append(table.data.nonDataColumns()
+						.map(col -> col.name)
+						.collect(Collectors.joining(", ")));
+				sql.append(".\n");
+			}
+			sql.append("insert into ");
+			sql.append(quoted(table.name));
+			sql.append(" (\n");
+			sql.append(table.data.dataColumns()
+					.map(col -> quoted(col.name))
+					.collect(Collectors.joining(terse ? "," : ",\n")));
+			sql.append("\n) values\n");
+			return sql.toString();
+		}
+
+		@Nonnull
+		@Override
+		public String dataRowInsert(@Nonnull Table table, @Nonnull Row row, boolean isFirst) {
+			StringBuilder sql = new StringBuilder();
+			if (!isFirst) {
+				sql.append(",");
+			}
+			sql.append(" (\n");
+			sql.append(row.cells()
+					//TODO @mark: what is the formatting here?
+					.map(val -> val.toString())
+					.collect(Collectors.joining(terse ? "," : ",\n")));
+			sql.append("\n)");
+			return sql.toString();
+		}
+
+		@Nonnull
+		@Override
+		public String insertEnd(@Nonnull Table table) {
+			return "";
+		}
+	}
+
+	@Nonnull
+	@Override
+	public Optional<InsertSyntax> insert() {
+		return Optional.of(new GenericInsertSyntax());
 	}
 
 	@Nonnull

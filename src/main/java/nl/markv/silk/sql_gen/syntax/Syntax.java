@@ -24,10 +24,14 @@ import nl.markv.silk.types.UniqueConstraint;
 public interface Syntax {
 
 	class SyntaxOptions {
+		/* Whether names should be quoted; affects case-sensitivity. */
 		final boolean quoteNames;
+		/* Whether to use terse format, if it is supported. May skip comments and extra whitespace. */
+		final boolean terse;
 
-		public SyntaxOptions(boolean quoteNames) {
+		public SyntaxOptions(boolean quoteNames, boolean terse) {
 			this.quoteNames = quoteNames;
+			this.terse = terse;
 		}
 	}
 
@@ -55,7 +59,7 @@ public interface Syntax {
 		String insertBegin(@Nonnull Table table);
 
 		@Nonnull
-		String dataRowInsert(@Nonnull Table table, @Nonnull Row row);
+		String dataRowInsert(@Nonnull Table table, @Nonnull Row row, boolean isFirst);
 
 		@Nonnull
 		String insertEnd(@Nonnull Table table);

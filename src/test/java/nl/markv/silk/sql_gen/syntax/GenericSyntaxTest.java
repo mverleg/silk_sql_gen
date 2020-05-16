@@ -24,13 +24,13 @@ class GenericSyntaxTest {
 
 	@Test
 	void testQuotesOn() {
-		SqliteSyntax syn = new SqliteSyntax("abc", "1.2.3", new Syntax.SyntaxOptions(true));
+		SqliteSyntax syn = new SqliteSyntax("abc", "1.2.3", new Syntax.SyntaxOptions(true, false));
 		assertEquals("\"My_name\"", syn.quoted("My_name"));
 	}
 
 	@Test
 	void testQuotesOff() {
-		SqliteSyntax syn = new SqliteSyntax("abc", "1.2.3", new Syntax.SyntaxOptions(false));
+		SqliteSyntax syn = new SqliteSyntax("abc", "1.2.3", new Syntax.SyntaxOptions(false, false));
 		assertEquals("My_name", syn.quoted("My_name"));
 	}
 }

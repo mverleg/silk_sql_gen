@@ -29,7 +29,7 @@ public class ParseExampleTest {
 	@MethodSource({"dialectExampleProvider"})
 	void testLoadExample(@Nonnull Pair<Generator.Dialect, SilkSchema> dialectSchemaPair) {
 		StringBuilder sql = new StringBuilder();
-		Generator.generate(sql, dialectSchemaPair.getRight(), dialectSchemaPair.getLeft(), new Syntax.SyntaxOptions(true));
+		Generator.generate(sql, dialectSchemaPair.getRight(), dialectSchemaPair.getLeft(), new Syntax.SyntaxOptions(true, false));
 		String txt = sql.toString();
 		System.out.println(txt);
 		assertFalse(txt.isEmpty());
