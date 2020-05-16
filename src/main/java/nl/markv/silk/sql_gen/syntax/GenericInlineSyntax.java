@@ -48,7 +48,9 @@ public abstract class GenericInlineSyntax extends GenericSyntax {
 	public Optional<TableEntrySyntax<UniqueConstraint, ListEntry>> uniqueInCreateTableSyntax() {
 		return Optional.of((table, unique) -> singletonList(listEntry(
 				"unique(",
-				String.join(", ", unique.columnsNames),
+				unique.columnsNames.stream()
+						.map(c -> quoted(c))
+						.collect(Collectors.joining(", ")),
 				")"
 		)));
 	}

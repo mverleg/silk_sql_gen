@@ -81,7 +81,7 @@ public abstract class GenericAlterSyntax extends GenericSyntax {
 				quoted(fk.sourceTable.name),
 				" add constraint ",
 				quoted(fk.name != null ? fk.name : nameFromHash(
-						"f_" + table.name + "_" + fk.sourceTable,
+						"f_" + table.name + "_" + fk.targetTableName,
 						String.join("_", fk.sourceColumns(c -> c.name)))),
 				" foreign key (",
 				String.join(", ", fk.sourceColumns(c -> quoted(c.name))),

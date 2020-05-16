@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
@@ -41,8 +40,7 @@ public class Generator {
 	public enum Dialect {
 		Sqlite(SqliteSyntax::new),
 		Postgres(PostgresSyntax::new),
-//		H2(H2Syntax::new),
-//		DB2(DB2Syntax::new)
+		//DB2(DB2Syntax::new)
 		;
 
 		public final Syntax.SyntaxConstructor syntaxGenerator;
@@ -158,6 +156,10 @@ public class Generator {
 		//TODO @mark: test this block size thing
 		ArrayList<Statement> statements = new ArrayList<>();
 		List<Row> rows = table.data.rows().collect(Collectors.toList());
+		if (!rows.isEmpty() && table.data.nonDataColumns().findAny().isPresent()) {
+			statements.add(comment("Columns using default values: " +
+					table.data.nonDataColumns().map(c -> c.name).collect(Collectors.joining(", "))));
+		}
 		int rowsPerInsert = insertSyn.rowsPerStatement();
 		for (int blockIndex = 0; blockIndex < table.data.size(); blockIndex += rowsPerInsert) {
 			StringBuilder sql = new StringBuilder();

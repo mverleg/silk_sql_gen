@@ -113,20 +113,20 @@ public abstract class GenericSyntax implements Syntax {
 			return "null";
 		}
 		if (type instanceof DataType.Text) {
-			String escaped = value.toString().replace("\\", "\\\\").replace("\"", "\\\"");
-			return "\"" + escaped + "\"";
+			String escaped = value.toString().replace("\\", "\\\\").replace("'", "\\'");
+			return "'" + escaped + "'";
 		}
 		if (type instanceof DataType.Int) {
 			return value.toString();
 		}
 		if (type instanceof DataType.Decimal) {
 			//TODO @mark: make sure number of decimals here is correct
-			return value.toString();
+			return "'" + value + "'";
 		}
 		if (type instanceof DataType.Timestamp) {
 			// Use 'notNull' because valueToJson should only return null for null inputs,
 			// which cannot happen here.
-			return notNull(type.valueToJson(value)).toString();
+			return "'" + notNull(type.valueToJson(value)) + "'";
 		}
 		throw new IllegalArgumentException("Got value '" + value + "' of type " + type +
 				", which is not currently supported");
@@ -218,9 +218,8 @@ public abstract class GenericSyntax implements Syntax {
 				sql.append(",");
 			}
 			sql.append(terse ? "(" : " (\n\t");
-			sql.append(row.cells()
-					//TODO @mark: what is the formatting here?
-					.map(val -> val.toString())
+			sql.append(row.cells((col, val) -> valueToSql(col.type, val))
+					.map(q -> (String)q)
 					.collect(Collectors.joining(terse ? "," : ",\n\t")));
 			sql.append("\n)");
 			return sql.toString();
