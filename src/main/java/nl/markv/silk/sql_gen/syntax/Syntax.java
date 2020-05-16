@@ -14,6 +14,7 @@ import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.ForeignKey;
+import nl.markv.silk.types.Row;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
 
@@ -44,6 +45,20 @@ public interface Syntax {
 		List<U> entry(@Nonnull Table table, @Nonnull T entry);
 		@Nonnull
 		default List<U> end(@Nonnull Table table) { return Collections.emptyList(); };
+	}
+
+	interface InsertSyntax {
+
+		int rowsPerStatement();
+
+		@Nonnull
+		String insertBegin(@Nonnull Table table);
+
+		@Nonnull
+		String dataRowInsert(@Nonnull Table table, @Nonnull Row row);
+
+		@Nonnull
+		String insertEnd(@Nonnull Table table);
 	}
 
 	@Nonnull
@@ -93,6 +108,9 @@ public interface Syntax {
 
 	@Nonnull
 	Optional<TableEntrySyntax<ColumnInfo, Statement>> changeColumnForExistingTableSyntax();
+
+	@Nonnull
+	Optional<InsertSyntax> insert();
 
 	final class ColumnInfo {
 		@Nonnull public final Column column;
