@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
@@ -21,6 +23,7 @@ import nl.markv.silk.types.CheckConstraint;
 import nl.markv.silk.types.Column;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.ForeignKey;
+import nl.markv.silk.types.Row;
 import nl.markv.silk.types.SilkSchema;
 import nl.markv.silk.types.Table;
 import nl.markv.silk.types.UniqueConstraint;
@@ -76,7 +79,14 @@ public class Generator {
 					.map(primaryKeySyn -> generatePrimaryKey(primaryKeySyn, table))
 					.orElse(Collections.emptyList()));
 		});
-		//TODO: in the future, insert data here
+
+		schema.tables().forEach(table -> {
+			statements.singleEmptyLine();
+			statements.add(gen.insert()
+					.map(insertSyn -> generateData(insertSyn, table))
+					.orElse(Collections.emptyList()));
+		});
+
 		schema.tables().forEach(table -> {
 			statements.singleEmptyLine();
 			statements.add(gen.addCheckToExistingTableSyntax()
@@ -141,6 +151,27 @@ public class Generator {
 		}
 		list.addAll(columnSyn.end(table));
 		return list;
+	}
+
+	@Nonnull
+	private static List<Statement> generateData(@Nonnull Syntax.InsertSyntax insertSyn, @Nonnull Table table) {
+		//TODO @mark: test this block size thing
+		ArrayList<Statement> statements = new ArrayList<>();
+		List<Row> rows = table.data.rows().collect(Collectors.toList());
+		int rowsPerInsert = insertSyn.rowsPerStatement();
+		for (int blockIndex = 0; blockIndex < table.data.size(); blockIndex += rowsPerInsert) {
+			StringBuilder sql = new StringBuilder();
+			sql.append(insertSyn.insertBegin(table));
+			boolean isFirst = true;
+			int endIndex = Math.min(rows.size(), blockIndex * rowsPerInsert + rowsPerInsert);
+			for (int rowNr = blockIndex * rowsPerInsert; rowNr < endIndex; rowNr++) {
+				sql.append(insertSyn.dataRowInsert(table, rows.get(rowNr), isFirst));
+				isFirst = false;
+			}
+			sql.append(insertSyn.insertEnd(table));
+			statements.add(statement(sql.toString()));
+		}
+		return statements;
 	}
 
 	@Nonnull

@@ -200,20 +200,13 @@ public abstract class GenericSyntax implements Syntax {
 		@Override
 		public String insertBegin(@Nonnull Table table) {
 			StringBuilder sql = new StringBuilder();
-			if (!terse && table.data.nonDataColumns().findAny().isPresent()) {
-				sql.append("-- columns filled from default values: ");
-				sql.append(table.data.nonDataColumns()
-						.map(col -> col.name)
-						.collect(Collectors.joining(", ")));
-				sql.append(".\n");
-			}
 			sql.append("insert into ");
 			sql.append(quoted(table.name));
-			sql.append(" (\n");
+			sql.append(terse ? "(" : " (\n\t");
 			sql.append(table.data.dataColumns()
 					.map(col -> quoted(col.name))
-					.collect(Collectors.joining(terse ? "," : ",\n")));
-			sql.append("\n) values\n");
+					.collect(Collectors.joining(terse ? "," : ",\n\t")));
+			sql.append("\n) values");
 			return sql.toString();
 		}
 
@@ -224,11 +217,11 @@ public abstract class GenericSyntax implements Syntax {
 			if (!isFirst) {
 				sql.append(",");
 			}
-			sql.append(" (\n");
+			sql.append(terse ? "(" : " (\n\t");
 			sql.append(row.cells()
 					//TODO @mark: what is the formatting here?
 					.map(val -> val.toString())
-					.collect(Collectors.joining(terse ? "," : ",\n")));
+					.collect(Collectors.joining(terse ? "," : ",\n\t")));
 			sql.append("\n)");
 			return sql.toString();
 		}

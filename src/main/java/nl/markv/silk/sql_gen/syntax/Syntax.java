@@ -25,9 +25,9 @@ public interface Syntax {
 
 	class SyntaxOptions {
 		/* Whether names should be quoted; affects case-sensitivity. */
-		final boolean quoteNames;
+		public final boolean quoteNames;
 		/* Whether to use terse format, if it is supported. May skip comments and extra whitespace. */
-		final boolean terse;
+		public final boolean terse;
 
 		public SyntaxOptions(boolean quoteNames, boolean terse) {
 			this.quoteNames = quoteNames;
