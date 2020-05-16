@@ -6,7 +6,7 @@ import nl.markv.silk.types.SilkSchema;
 
 public class Main {
 	public static void main(String[] args) {
-		for (SilkSchema schema : new Examples().jsons()) {
+		for (SilkSchema schema : new Examples().schemas()) {
 			StringBuilder sql = new StringBuilder();
 			Generator.generate(sql, schema, Generator.Dialect.Sqlite, new Syntax.SyntaxOptions(true));
 			System.out.println(sql.toString());

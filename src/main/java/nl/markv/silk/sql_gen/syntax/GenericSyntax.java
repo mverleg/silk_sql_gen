@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import nl.markv.silk.sql_gen.sqlparts.ListEntry;
 import nl.markv.silk.sql_gen.sqlparts.Statement;
 import nl.markv.silk.types.Column;
+import nl.markv.silk.types.DataType;
 import nl.markv.silk.types.DatabaseSpecific;
 import nl.markv.silk.types.ForeignKey;
 import nl.markv.silk.types.Table;
@@ -27,6 +28,7 @@ import static nl.markv.silk.sql_gen.sqlparts.Statement.comment;
 import static nl.markv.silk.sql_gen.sqlparts.Statement.statement;
 import static nl.markv.silk.sql_gen.sqlparts.StringEmptyLine.emptyLine;
 import static org.apache.commons.lang3.Validate.isTrue;
+import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * Attempt at a common version of SQL syntax.
@@ -94,12 +96,37 @@ public abstract class GenericSyntax implements Syntax {
 				sql.append(info.autoValueName);
 			} else if (column.defaultValue != null) {
 				sql.append(" default ");
-				sql.append(column.defaultValue);
+				sql.append(valueToSql(column.type, column.defaultValue));
 			} else if (!column.nullable) {
 				sql.append(" not null");
 			}
 			return singletonList(listEntry(sql.toString()));
 		};
+	}
+
+	@Nonnull
+	protected String valueToSql(@Nonnull DataType type, @Nullable Object value) {
+		if (value == null) {
+			return "null";
+		}
+		if (type instanceof DataType.Text) {
+			String escaped = value.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+			return "\"" + escaped + "\"";
+		}
+		if (type instanceof DataType.Int) {
+			return value.toString();
+		}
+		if (type instanceof DataType.Decimal) {
+			//TODO @mark: make sure number of decimals here is correct
+			return value.toString();
+		}
+		if (type instanceof DataType.Timestamp) {
+			// Use 'notNull' because valueToJson should only return null for null inputs,
+			// which cannot happen here.
+			return notNull(type.valueToJson(value)).toString();
+		}
+		throw new IllegalArgumentException("Got value '" + value + "' of type " + type +
+				", which is not currently supported");
 	}
 
 	@Nonnull

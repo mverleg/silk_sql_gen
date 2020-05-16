@@ -20,7 +20,7 @@ public class ParseExampleTest {
 
 	@Nonnull
 	static Stream<Pair<Generator.Dialect, SilkSchema>> dialectExampleProvider() {
-		return new Examples().jsons().stream()
+		return new Examples().schemas().stream()
 				.flatMap(schema -> Arrays.stream(Generator.Dialect.values())
 						.map(dialect -> Pair.of(dialect, schema)));
 	}

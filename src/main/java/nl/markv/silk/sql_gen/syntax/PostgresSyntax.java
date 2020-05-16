@@ -82,7 +82,7 @@ public class PostgresSyntax extends GenericAlterSyntax {
 				sql.append(info.autoValueName);
 			} else if (column.defaultValue != null) {
 				sql.append(" default ");
-				sql.append(column.defaultValue);
+				sql.append(valueToSql(column.type, column.defaultValue));
 			} else if (!column.nullable) {
 				sql.append(" not null");
 			}

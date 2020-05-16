@@ -6,7 +6,7 @@ Silk sql is a tool to initialize a database based on a [Silk](https://github.com
 Status
 -------------------------------
 
-This project is still very experimental, but at least the Silk demo json works on:
+This project is still very experimental, but the Silk test json works on:
 
 * Sqlite
 * Postgres

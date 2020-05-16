@@ -75,7 +75,7 @@ public class SqliteSyntax extends GenericInlineSyntax {
 					sql.append(info.autoValueName);
 				} else if (column.defaultValue != null) {
 					sql.append(" default ");
-					sql.append(column.defaultValue);
+					sql.append(valueToSql(column.type, column.defaultValue));
 				}
 			}
 			if (!column.nullable) {
